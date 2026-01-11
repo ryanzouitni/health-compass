@@ -52,6 +52,16 @@ export default {
           border: "var(--destructive-border)",
         },
         ring: "hsl(var(--ring) / <alpha-value>)",
+        risk: {
+          low: "hsl(var(--risk-low) / <alpha-value>)",
+          moderate: "hsl(var(--risk-moderate) / <alpha-value>)",
+          high: "hsl(var(--risk-high) / <alpha-value>)",
+        },
+        urgency: {
+          monitor: "hsl(var(--urgency-monitor) / <alpha-value>)",
+          soon: "hsl(var(--urgency-soon) / <alpha-value>)",
+          urgent: "hsl(var(--urgency-urgent) / <alpha-value>)",
+        },
         chart: {
           "1": "hsl(var(--chart-1) / <alpha-value>)",
           "2": "hsl(var(--chart-2) / <alpha-value>)",
