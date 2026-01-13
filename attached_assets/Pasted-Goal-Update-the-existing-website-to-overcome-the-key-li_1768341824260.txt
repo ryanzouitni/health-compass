@@ -1,0 +1,52 @@
+Goal: Update the existing website to overcome the key limitation: lack of contextualized local orientation for Morocco, especially considering:
+- geographic distance from care,
+- transport cost barriers,
+- lack of specialized facilities in rural areas.
+
+Requirements:
+1) Add a “Location & Access” module on the intake form:
+   - Ask for location optionally using (a) browser geolocation permission OR (b) manual input: city/village + province/region OR (c) prefer not to share.
+   - Ask rural/urban setting (rural/urban/not sure).
+   - Ask travel burden: approximate distance to nearest clinic/hospital (<5km, 5–20km, 20–50km, 50km+), transport difficulty (easy/moderate/difficult), and cost barrier (low/moderate/high).
+   - Ensure this module is fully translated in all languages.
+
+2) Add a Local Care Pathway engine:
+   - Based on urgency (urgent_now / see_soon / monitor) and the access burden (rural/urban + distance + transport/cost),
+     generate an adapted “Where to go” and “When to go” plan with culturally appropriate, simple language.
+   - For urgent_now, show a prominent red banner and tell the user to seek urgent care now.
+   - For rural/high distance/high barrier, provide alternative phrasing that acknowledges constraints but still prioritizes safety.
+
+3) Build a local directory of healthcare facilities:
+   - Create a facilities dataset (JSON) stored in the project with fields: name, type (health center/hospital/emergency), city/province/region, latitude/longitude (optional), phone, email (optional), hours (optional).
+   - Provide a “Find help near me” section on the results page:
+     - If GPS location is available: compute nearest facilities and suggest:
+       - nearest emergency-capable facility for urgent_now,
+       - nearest primary care health center/hospital for see_soon,
+       - routine care option for monitor.
+     - If only manual region is provided: filter facilities by region/province and show top options.
+     - If no location: show generic guidance + link to official resources.
+
+4) One-tap actions:
+   - For each recommended facility, include:
+     - “Open directions” link (Google Maps query by lat/lng or address),
+     - “Call” link (tel:),
+     - “Email” link (mailto:) with a pre-filled subject/body that includes a short patient summary (age, main symptoms, urgency, key risk factors).
+   - Add “Copy summary for clinic” button.
+
+5) PWA + low-data improvements:
+   - Add a manifest and service worker so the site is installable and caches translations, CSS, and JS.
+   - Ensure the site loads fast on low-bandwidth connections (no heavy assets).
+
+6) Translation completeness:
+   - Ensure every UI label and dynamic output text is translated in EN/FR/AR/TZM.
+   - Arabic should switch to RTL layout automatically.
+
+7) Safety and ethics:
+   - Keep disclaimers prominent and consistent across languages.
+   - Make location optional and explain how it is used.
+   - Do not provide diagnoses; only risk awareness and orientation to care.
+
+Deliverables:
+- Provide the updated code changes file-by-file (app.py updates, templates, static JS/CSS, facilities JSON, PWA files).
+- Keep my existing site structure (Flask templates + static folder) and integrate the new features cleanly.
+- Use clear, modern medical UI styling and fix spacing/overlap issues at the bottom of the page.

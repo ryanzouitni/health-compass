@@ -1,5 +1,30 @@
 import { z } from "zod";
 
+// Location & Access schema
+export const locationAccessSchema = z.object({
+  // Location preference
+  locationMethod: z.enum(["gps", "manual", "prefer_not"]).optional(),
+  
+  // GPS coordinates (if using geolocation)
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  
+  // Manual location input
+  city: z.string().optional(),
+  province: z.string().optional(),
+  region: z.string().optional(),
+  
+  // Setting
+  settingType: z.enum(["urban", "rural", "not_sure"]).optional(),
+  
+  // Travel burden
+  distanceToClinic: z.enum(["less_5km", "5_20km", "20_50km", "more_50km"]).optional(),
+  transportDifficulty: z.enum(["easy", "moderate", "difficult"]).optional(),
+  costBarrier: z.enum(["low", "moderate", "high"]).optional(),
+});
+
+export type LocationAccess = z.infer<typeof locationAccessSchema>;
+
 // Assessment form data schema
 export const assessmentSchema = z.object({
   // Demographics
@@ -34,6 +59,9 @@ export const assessmentSchema = z.object({
   slowHealingWounds: z.boolean(),
   chestPain: z.boolean(),
   shortnessOfBreath: z.boolean(),
+  
+  // Location & Access (optional)
+  locationAccess: locationAccessSchema.optional(),
 });
 
 export type Assessment = z.infer<typeof assessmentSchema>;
@@ -65,6 +93,26 @@ export interface WarningSign {
   actionKey: string;
 }
 
+// Care pathway recommendation
+export interface CarePathway {
+  whereToGoKey: string;
+  whenToGoKey: string;
+  additionalGuidanceKey?: string;
+  isRural: boolean;
+  hasHighAccessBarrier: boolean;
+}
+
+// Facility recommendation for results
+export interface FacilityRecommendation {
+  facilityId: string;
+  name: string;
+  type: string;
+  distance?: number;
+  phone?: string;
+  email?: string;
+  mapsUrl?: string;
+}
+
 // Complete risk assessment result
 export interface RiskResult {
   diabetesRisk: RiskLevel;
@@ -76,6 +124,9 @@ export interface RiskResult {
   warningSigns: WarningSign[];
   bmi: number;
   bmiCategory: string;
+  carePathway?: CarePathway;
+  recommendedFacilities?: FacilityRecommendation[];
+  locationProvided: boolean;
 }
 
 // Language type
