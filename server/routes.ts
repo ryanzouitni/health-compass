@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { assessmentSchema } from "../shared/schema";
-import type { Assessment, RiskResult, RiskFactor, LifestyleSuggestion, WarningSign, RiskLevel, UrgencyLevel } from "../shared/schema";
+import type { Assessment, RiskResult, RiskFactor, LifestyleSuggestion, WarningSign, RiskLevel, UrgencyLevel, CarePathway, FacilityRecommendation } from "../shared/schema";
+import { findNearestFacilities, findFacilitiesByRegion, type HealthcareFacility } from "../shared/facilities";
 
 // Calculate BMI
 function calculateBMI(weight: number, height: number): number {
@@ -412,6 +413,100 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     { id: "wounds", signKey: "warning.wounds", actionKey: "warning.wounds.action" },
   ];
 
+  // Determine if location was provided
+  const locationProvided = !!(data.locationAccess && 
+    (data.locationAccess.locationMethod === "gps" || data.locationAccess.locationMethod === "manual"));
+
+  // Generate care pathway based on urgency and access barriers
+  let carePathway: CarePathway | undefined;
+  let recommendedFacilities: FacilityRecommendation[] | undefined;
+
+  if (data.locationAccess) {
+    const isRural = data.locationAccess.settingType === "rural";
+    const hasHighAccessBarrier = 
+      data.locationAccess.distanceToClinic === "more_50km" ||
+      data.locationAccess.distanceToClinic === "20_50km" ||
+      data.locationAccess.transportDifficulty === "difficult" ||
+      data.locationAccess.costBarrier === "high";
+
+    // Generate care pathway recommendations
+    let whereToGoKey = "pathway.where.routine";
+    let whenToGoKey = "pathway.when.routine";
+    let additionalGuidanceKey: string | undefined;
+
+    if (urgency === "urgent") {
+      whereToGoKey = "pathway.where.emergency";
+      whenToGoKey = "pathway.when.now";
+      if (isRural || hasHighAccessBarrier) {
+        additionalGuidanceKey = "pathway.urgent.rural";
+      }
+    } else if (urgency === "see_doctor_soon") {
+      whereToGoKey = overallRisk === "high" ? "pathway.where.hospital" : "pathway.where.healthCenter";
+      whenToGoKey = "pathway.when.fewDays";
+      if (isRural || hasHighAccessBarrier) {
+        additionalGuidanceKey = "pathway.soon.rural";
+      }
+    } else {
+      whereToGoKey = "pathway.where.clinic";
+      whenToGoKey = "pathway.when.twoWeeks";
+      if (isRural || hasHighAccessBarrier) {
+        additionalGuidanceKey = "pathway.monitor.rural";
+      }
+    }
+
+    carePathway = {
+      whereToGoKey,
+      whenToGoKey,
+      additionalGuidanceKey,
+      isRural,
+      hasHighAccessBarrier,
+    };
+
+    // Find recommended facilities based on location
+    let nearbyFacilities: (HealthcareFacility & { distance?: number })[] = [];
+
+    if (data.locationAccess.latitude && data.locationAccess.longitude) {
+      // Use GPS coordinates to find nearest facilities
+      const facilityType = urgency === "urgent" ? undefined : undefined;
+      const needsEmergency = urgency === "urgent";
+      
+      nearbyFacilities = findNearestFacilities(
+        data.locationAccess.latitude,
+        data.locationAccess.longitude,
+        { hasEmergency: needsEmergency || undefined, limit: 3 }
+      );
+    } else if (data.locationAccess.region || data.locationAccess.province || data.locationAccess.city) {
+      // Use manual location to find facilities in region
+      const searchTerm = data.locationAccess.region || data.locationAccess.province || data.locationAccess.city || "";
+      const needsEmergency = urgency === "urgent";
+      
+      nearbyFacilities = findFacilitiesByRegion(searchTerm, {
+        hasEmergency: needsEmergency || undefined,
+        limit: 3,
+      });
+    }
+
+    if (nearbyFacilities.length > 0) {
+      recommendedFacilities = nearbyFacilities.map((facility) => {
+        const lat = facility.latitude;
+        const lng = facility.longitude;
+        const mapsUrl = lat && lng 
+          ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name + " " + facility.city)}`;
+
+        return {
+          facilityId: facility.id,
+          name: facility.name,
+          type: facility.type,
+          distance: "distance" in facility ? facility.distance : undefined,
+          phone: facility.phone,
+          email: facility.email,
+          mapsUrl,
+        };
+      });
+    }
+  }
+
   return {
     diabetesRisk,
     cardiovascularRisk,
@@ -422,6 +517,9 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     warningSigns,
     bmi,
     bmiCategory,
+    carePathway,
+    recommendedFacilities,
+    locationProvided,
   };
 }
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, MapPin, Navigation, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,11 +10,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/lib/language-context";
 import { apiRequest } from "@/lib/queryClient";
-import type { Assessment, RiskResult } from "@shared/schema";
+import type { Assessment, RiskResult, LocationAccess } from "@shared/schema";
+import { moroccoRegions } from "@shared/facilities";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 interface FormData {
   age: number;
@@ -40,6 +42,16 @@ interface FormData {
   slowHealingWounds: boolean;
   chestPain: boolean;
   shortnessOfBreath: boolean;
+  locationMethod: "gps" | "manual" | "prefer_not" | "";
+  latitude: number | null;
+  longitude: number | null;
+  city: string;
+  province: string;
+  region: string;
+  settingType: "urban" | "rural" | "not_sure" | "";
+  distanceToClinic: "less_5km" | "5_20km" | "20_50km" | "more_50km" | "";
+  transportDifficulty: "easy" | "moderate" | "difficult" | "";
+  costBarrier: "low" | "moderate" | "high" | "";
 }
 
 const initialFormData: FormData = {
@@ -66,6 +78,16 @@ const initialFormData: FormData = {
   slowHealingWounds: false,
   chestPain: false,
   shortnessOfBreath: false,
+  locationMethod: "",
+  latitude: null,
+  longitude: null,
+  city: "",
+  province: "",
+  region: "",
+  settingType: "",
+  distanceToClinic: "",
+  transportDifficulty: "",
+  costBarrier: "",
 };
 
 export default function AssessmentPage() {
@@ -74,6 +96,7 @@ export default function AssessmentPage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [geoStatus, setGeoStatus] = useState<"idle" | "detecting" | "success" | "error">("idle");
 
   const mutation = useMutation({
     mutationFn: async (data: Assessment) => {
@@ -131,6 +154,19 @@ export default function AssessmentPage() {
   };
 
   const handleSubmit = () => {
+    const locationAccess: LocationAccess | undefined = formData.locationMethod ? {
+      locationMethod: formData.locationMethod as "gps" | "manual" | "prefer_not",
+      latitude: formData.latitude ?? undefined,
+      longitude: formData.longitude ?? undefined,
+      city: formData.city || undefined,
+      province: formData.province || undefined,
+      region: formData.region || undefined,
+      settingType: formData.settingType as "urban" | "rural" | "not_sure" | undefined,
+      distanceToClinic: formData.distanceToClinic as "less_5km" | "5_20km" | "20_50km" | "more_50km" | undefined,
+      transportDifficulty: formData.transportDifficulty as "easy" | "moderate" | "difficult" | undefined,
+      costBarrier: formData.costBarrier as "low" | "moderate" | "high" | undefined,
+    } : undefined;
+
     const assessmentData: Assessment = {
       age: formData.age,
       gender: formData.gender,
@@ -155,9 +191,29 @@ export default function AssessmentPage() {
       slowHealingWounds: formData.slowHealingWounds,
       chestPain: formData.chestPain,
       shortnessOfBreath: formData.shortnessOfBreath,
+      locationAccess,
     };
 
     mutation.mutate(assessmentData);
+  };
+
+  const requestGeolocation = () => {
+    setGeoStatus("detecting");
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          updateField("latitude", position.coords.latitude);
+          updateField("longitude", position.coords.longitude);
+          setGeoStatus("success");
+        },
+        () => {
+          setGeoStatus("error");
+        },
+        { timeout: 10000, enableHighAccuracy: false }
+      );
+    } else {
+      setGeoStatus("error");
+    }
   };
 
   const progress = (step / TOTAL_STEPS) * 100;
@@ -454,6 +510,218 @@ export default function AssessmentPage() {
                   </Label>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Step 6: Location & Access */}
+          {step === 6 && (
+            <div className="space-y-6">
+              {/* Privacy Notice */}
+              <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <p>{t("location.privacy")}</p>
+                </div>
+              </div>
+
+              {/* Location Method Selection */}
+              <div className="space-y-3">
+                <Label>{t("location.method")}</Label>
+                <RadioGroup
+                  value={formData.locationMethod}
+                  onValueChange={(value) => {
+                    updateField("locationMethod", value as FormData["locationMethod"]);
+                    if (value === "gps") {
+                      requestGeolocation();
+                    }
+                  }}
+                  className="space-y-3"
+                >
+                  <div className="flex items-start space-x-3 rtl:space-x-reverse rounded-lg border p-3 hover-elevate cursor-pointer">
+                    <RadioGroupItem value="gps" id="location-gps" data-testid="radio-location-gps" className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor="location-gps" className="font-medium cursor-pointer flex items-center gap-2">
+                        <Navigation className="h-4 w-4" />
+                        {t("location.gps")}
+                      </Label>
+                      <p className="text-sm text-muted-foreground">{t("location.gps.desc")}</p>
+                      {formData.locationMethod === "gps" && (
+                        <div className="mt-2">
+                          {geoStatus === "detecting" && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              {t("location.detecting")}
+                            </div>
+                          )}
+                          {geoStatus === "success" && (
+                            <div className="flex items-center gap-2 text-sm text-green-600">
+                              <MapPin className="h-4 w-4" />
+                              {t("location.detected")}
+                            </div>
+                          )}
+                          {geoStatus === "error" && (
+                            <div className="text-sm text-destructive">{t("location.error")}</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 rtl:space-x-reverse rounded-lg border p-3 hover-elevate cursor-pointer">
+                    <RadioGroupItem value="manual" id="location-manual" data-testid="radio-location-manual" className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor="location-manual" className="font-medium cursor-pointer flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        {t("location.manual")}
+                      </Label>
+                      <p className="text-sm text-muted-foreground">{t("location.manual.desc")}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 rtl:space-x-reverse rounded-lg border p-3 hover-elevate cursor-pointer">
+                    <RadioGroupItem value="prefer_not" id="location-prefer-not" data-testid="radio-location-prefer-not" className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor="location-prefer-not" className="font-medium cursor-pointer">
+                        {t("location.preferNot")}
+                      </Label>
+                      <p className="text-sm text-muted-foreground">{t("location.preferNot.desc")}</p>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Manual Location Input */}
+              {formData.locationMethod === "manual" && (
+                <div className="space-y-4 rounded-lg border p-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">{t("location.city")}</Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => updateField("city", e.target.value)}
+                        placeholder={t("location.city.placeholder")}
+                        data-testid="input-city"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="province">{t("location.province")}</Label>
+                      <Input
+                        id="province"
+                        value={formData.province}
+                        onChange={(e) => updateField("province", e.target.value)}
+                        placeholder={t("location.province.placeholder")}
+                        data-testid="input-province"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="region">{t("location.region")}</Label>
+                    <Select
+                      value={formData.region}
+                      onValueChange={(value) => updateField("region", value)}
+                    >
+                      <SelectTrigger data-testid="select-region">
+                        <SelectValue placeholder={t("location.region.placeholder")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {moroccoRegions.map((region) => (
+                          <SelectItem key={region} value={region}>
+                            {region}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* Setting Type (Urban/Rural) */}
+              {formData.locationMethod && formData.locationMethod !== "prefer_not" && (
+                <div className="space-y-3">
+                  <Label>{t("setting.title")}</Label>
+                  <RadioGroup
+                    value={formData.settingType}
+                    onValueChange={(value) => updateField("settingType", value as FormData["settingType"])}
+                    className="flex flex-wrap gap-4"
+                  >
+                    {(["urban", "rural", "not_sure"] as const).map((setting) => (
+                      <div key={setting} className="flex items-center space-x-2 rtl:space-x-reverse">
+                        <RadioGroupItem value={setting} id={`setting-${setting}`} data-testid={`radio-setting-${setting}`} />
+                        <Label htmlFor={`setting-${setting}`} className="font-normal">
+                          {t(`setting.${setting === "not_sure" ? "notSure" : setting}`)}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              )}
+
+              {/* Access to Healthcare */}
+              {formData.locationMethod && formData.locationMethod !== "prefer_not" && (
+                <div className="space-y-4 rounded-lg border p-4">
+                  <h4 className="font-medium">{t("access.title")}</h4>
+
+                  <div className="space-y-3">
+                    <Label>{t("access.distance")}</Label>
+                    <RadioGroup
+                      value={formData.distanceToClinic}
+                      onValueChange={(value) => updateField("distanceToClinic", value as FormData["distanceToClinic"])}
+                      className="grid gap-2 sm:grid-cols-2"
+                    >
+                      {([
+                        { value: "less_5km", key: "less5" },
+                        { value: "5_20km", key: "5to20" },
+                        { value: "20_50km", key: "20to50" },
+                        { value: "more_50km", key: "more50" },
+                      ] as const).map(({ value, key }) => (
+                        <div key={value} className="flex items-center space-x-2 rtl:space-x-reverse">
+                          <RadioGroupItem value={value} id={`distance-${value}`} data-testid={`radio-distance-${value}`} />
+                          <Label htmlFor={`distance-${value}`} className="font-normal">
+                            {t(`access.distance.${key}`)}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label>{t("access.transport")}</Label>
+                    <RadioGroup
+                      value={formData.transportDifficulty}
+                      onValueChange={(value) => updateField("transportDifficulty", value as FormData["transportDifficulty"])}
+                      className="flex flex-wrap gap-4"
+                    >
+                      {(["easy", "moderate", "difficult"] as const).map((level) => (
+                        <div key={level} className="flex items-center space-x-2 rtl:space-x-reverse">
+                          <RadioGroupItem value={level} id={`transport-${level}`} data-testid={`radio-transport-${level}`} />
+                          <Label htmlFor={`transport-${level}`} className="font-normal">
+                            {t(`access.transport.${level}`)}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label>{t("access.cost")}</Label>
+                    <RadioGroup
+                      value={formData.costBarrier}
+                      onValueChange={(value) => updateField("costBarrier", value as FormData["costBarrier"])}
+                      className="space-y-2"
+                    >
+                      {(["low", "moderate", "high"] as const).map((level) => (
+                        <div key={level} className="flex items-center space-x-2 rtl:space-x-reverse">
+                          <RadioGroupItem value={level} id={`cost-${level}`} data-testid={`radio-cost-${level}`} />
+                          <Label htmlFor={`cost-${level}`} className="font-normal">
+                            {t(`access.cost.${level}`)}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

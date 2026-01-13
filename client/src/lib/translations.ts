@@ -239,6 +239,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Actions
     "action.restart": "Start New Assessment",
     "action.print": "Print Results",
+    "action.copy": "Copy Summary",
     "action.findDoctor": "Find a Doctor",
     
     // Footer
@@ -297,6 +298,10 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Care Pathway
     "pathway.title": "Your Care Pathway",
+    "pathway.subtitle": "Personalized guidance for your health needs",
+    "pathway.where": "Where to Go",
+    "pathway.when": "When to Go",
+    "pathway.additional": "Important Note",
     "pathway.whereToGo": "Where to Go",
     "pathway.whenToGo": "When to Go",
     "pathway.urgent.banner": "SEEK CARE IMMEDIATELY",
@@ -333,6 +338,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "facilities.distance": "{distance} km away",
     "facilities.hours": "Hours: {hours}",
     "facilities.open24": "Open 24/7",
+    
+    // Facility Types
+    "facility.type.hospital": "Hospital",
+    "facility.type.health_center": "Health Center",
+    "facility.type.emergency": "Emergency Services",
     
     // Facility Actions
     "facility.directions": "Get Directions",
@@ -589,6 +599,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Actions
     "action.restart": "Nouvelle Évaluation",
     "action.print": "Imprimer les Résultats",
+    "action.copy": "Copier le Résumé",
     "action.findDoctor": "Trouver un Médecin",
     
     // Footer
@@ -647,6 +658,10 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Care Pathway
     "pathway.title": "Votre Parcours de Soins",
+    "pathway.subtitle": "Conseils personnalisés pour vos besoins de santé",
+    "pathway.where": "Où Aller",
+    "pathway.when": "Quand Y Aller",
+    "pathway.additional": "Note Importante",
     "pathway.whereToGo": "Où Aller",
     "pathway.whenToGo": "Quand Y Aller",
     "pathway.urgent.banner": "CONSULTEZ IMMÉDIATEMENT",
@@ -683,6 +698,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "facilities.distance": "À {distance} km",
     "facilities.hours": "Heures: {hours}",
     "facilities.open24": "Ouvert 24h/24",
+    
+    // Facility Types
+    "facility.type.hospital": "Hôpital",
+    "facility.type.health_center": "Centre de Santé",
+    "facility.type.emergency": "Services d'Urgence",
     
     // Facility Actions
     "facility.directions": "Obtenir l'Itinéraire",
@@ -939,6 +959,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Actions
     "action.restart": "ابدأ تقييماً جديداً",
     "action.print": "طباعة النتائج",
+    "action.copy": "نسخ الملخص",
     "action.findDoctor": "ابحث عن طبيب",
     
     // Footer
@@ -997,6 +1018,10 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Care Pathway
     "pathway.title": "مسار الرعاية الخاص بك",
+    "pathway.subtitle": "إرشادات مخصصة لاحتياجاتك الصحية",
+    "pathway.where": "أين تذهب",
+    "pathway.when": "متى تذهب",
+    "pathway.additional": "ملاحظة مهمة",
     "pathway.whereToGo": "أين تذهب",
     "pathway.whenToGo": "متى تذهب",
     "pathway.urgent.banner": "اطلب الرعاية فوراً",
@@ -1033,6 +1058,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "facilities.distance": "على بعد {distance} كم",
     "facilities.hours": "الساعات: {hours}",
     "facilities.open24": "مفتوح 24/7",
+    
+    // Facility Types
+    "facility.type.hospital": "مستشفى",
+    "facility.type.health_center": "مركز صحي",
+    "facility.type.emergency": "خدمات الطوارئ",
     
     // Facility Actions
     "facility.directions": "احصل على الاتجاهات",
@@ -1289,6 +1319,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Actions
     "action.restart": "ⵙⵏⵜⵉ ⴰⵙⴼⵔⴰⵙ ⴰⵎⴰⵢⵏⵓ",
     "action.print": "ⵙⵉⴳⴳⵍ ⵜⵉⵢⴰⴼⵓⵜⵉⵏ",
+    "action.copy": "ⵙⵏⵖⵍ ⴰⴳⵔⵔⵓ",
     "action.findDoctor": "ⴰⴼ ⴰⵎⵙⵏⴼⴰⵔ",
     
     // Footer
@@ -1347,6 +1378,10 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Care Pathway
     "pathway.title": "ⴰⴱⵔⵉⴷ ⵏⵏⴽ ⵖⵔ ⵜⵓⵙⵙⵏⴰ",
+    "pathway.subtitle": "ⵉⵎⵙⵖⴰⵏⵏ ⵢⵓⵜⵜⵓⵏ ⵉ ⵡⴰⴷⴷⴰⴷ ⵏⵏⴽ ⵏ ⵜⵓⵙⵙⵏⴰ",
+    "pathway.where": "ⵎⴰⵏⵉ ⴰⴷ ⵜⴷⴷⵓⵜ",
+    "pathway.when": "ⵎⵍⵎⵉ ⴰⴷ ⵜⴷⴷⵓⵜ",
+    "pathway.additional": "ⵜⴰⵎⴰⵡⵜ ⵜⴰⵅⴰⵜⴰⵔⵜ",
     "pathway.whereToGo": "ⵎⴰⵏⵉ ⴰⴷ ⵜⴷⴷⵓⵜ",
     "pathway.whenToGo": "ⵎⵍⵎⵉ ⴰⴷ ⵜⴷⴷⵓⵜ",
     "pathway.urgent.banner": "ⵙⵓⵜⵔ ⵜⵓⵙⵙⵏⴰ ⴷⵖⵉⴽⴽⴰ",
@@ -1383,6 +1418,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "facilities.distance": "ⴳ {distance} ⴽⵎ",
     "facilities.hours": "ⵜⵓⵙⵔⵉⵜⵉⵏ: {hours}",
     "facilities.open24": "ⵉⵔⵣⵎ 24/7",
+    
+    // Facility Types
+    "facility.type.hospital": "ⴰⵙⴱⵉⵟⴰⵔ",
+    "facility.type.health_center": "ⴰⵎⵎⴰⵙ ⵏ ⵜⵓⵙⵙⵏⴰ",
+    "facility.type.emergency": "ⵜⵉⵏⴰⴼⵓⵜⵉⵏ ⵏ ⵜⵣⵎⵎⴰⵔⵜ",
     
     // Facility Actions
     "facility.directions": "ⴰⵡⵉ ⴰⴱⵔⵉⴷ",

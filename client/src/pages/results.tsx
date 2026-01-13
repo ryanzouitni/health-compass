@@ -23,6 +23,13 @@ import {
   Phone,
   ExternalLink,
   Shield,
+  MapPin,
+  Navigation,
+  Mail,
+  Copy,
+  Building2,
+  Hospital,
+  AlertOctagon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +41,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language-context";
 import type { RiskResult, RiskLevel, UrgencyLevel } from "@shared/schema";
 
@@ -101,7 +109,8 @@ function isValidRiskResult(data: unknown): data is RiskResult {
     typeof obj.bmiCategory === "string" && validBmiCategories.includes(obj.bmiCategory) &&
     Array.isArray(obj.contributingFactors) &&
     Array.isArray(obj.lifestyleSuggestions) &&
-    Array.isArray(obj.warningSigns)
+    Array.isArray(obj.warningSigns) &&
+    typeof obj.locationProvided === "boolean"
   );
 }
 
@@ -109,6 +118,42 @@ export default function ResultsPage() {
   const { t, isRTL } = useLanguage();
   const [, setLocation] = useLocation();
   const [result, setResult] = useState<RiskResult | null>(null);
+  const { toast } = useToast();
+
+  const handleCopySummary = () => {
+    if (!result) return;
+    
+    const summary = `Health Assessment Summary
+---
+Risk Level: ${t(`risk.${result.overallRisk}`)}
+Urgency: ${t(`urgency.${result.urgency}`)}
+BMI: ${result.bmi.toFixed(1)} (${t(`bmi.${result.bmiCategory}`)})
+
+Key Risk Factors:
+${result.contributingFactors.map(f => `- ${t(f.nameKey)}`).join('\n')}
+
+Recommendations:
+${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\n')}
+`;
+    
+    navigator.clipboard.writeText(summary).then(() => {
+      toast({
+        title: t("facility.copied"),
+        duration: 2000,
+      });
+    });
+  };
+
+  const getFacilityTypeIcon = (type: string) => {
+    switch (type) {
+      case "hospital":
+        return Hospital;
+      case "emergency":
+        return AlertOctagon;
+      default:
+        return Building2;
+    }
+  };
 
   useEffect(() => {
     const stored = sessionStorage.getItem("assessmentResult");
@@ -151,6 +196,10 @@ export default function ResultsPage() {
       <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-2xl font-bold md:text-3xl">{t("results.title")}</h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleCopySummary} className="gap-2" data-testid="button-copy">
+            <Copy className="h-4 w-4" />
+            {t("action.copy")}
+          </Button>
           <Button variant="outline" size="sm" onClick={handlePrint} className="gap-2" data-testid="button-print">
             <Printer className="h-4 w-4" />
             {t("action.print")}
@@ -394,6 +443,131 @@ export default function ResultsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Care Pathway - only shown if location was provided */}
+      {result.carePathway && (
+        <Card className="mb-8 border-2">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Navigation className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>{t("pathway.title")}</CardTitle>
+                <CardDescription>{t("pathway.subtitle")}</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Where to go */}
+            <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
+              <MapPin className="h-5 w-5 shrink-0 text-primary mt-0.5" />
+              <div>
+                <p className="font-medium text-sm text-muted-foreground mb-1">{t("pathway.where")}</p>
+                <p className="font-semibold">{t(result.carePathway.whereToGoKey)}</p>
+              </div>
+            </div>
+            
+            {/* When to go */}
+            <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
+              <Clock className="h-5 w-5 shrink-0 text-primary mt-0.5" />
+              <div>
+                <p className="font-medium text-sm text-muted-foreground mb-1">{t("pathway.when")}</p>
+                <p className="font-semibold">{t(result.carePathway.whenToGoKey)}</p>
+              </div>
+            </div>
+            
+            {/* Additional guidance for rural/high-barrier users */}
+            {result.carePathway.additionalGuidanceKey && (
+              <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+                <AlertCircle className="h-5 w-5 shrink-0 text-amber-500 mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm text-amber-600 dark:text-amber-400 mb-1">{t("pathway.additional")}</p>
+                  <p className="text-sm">{t(result.carePathway.additionalGuidanceKey)}</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recommended Facilities - only shown if facilities available */}
+      {result.recommendedFacilities && result.recommendedFacilities.length > 0 && (
+        <Card className="mb-8 border-2">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Hospital className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>{t("facilities.title")}</CardTitle>
+                <CardDescription>{t("facilities.subtitle")}</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {result.recommendedFacilities.map((facility, index) => {
+                const FacilityIcon = getFacilityTypeIcon(facility.type);
+                return (
+                  <div
+                    key={facility.facilityId}
+                    className="rounded-lg border p-4"
+                    data-testid={`facility-card-${index}`}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                          facility.type === "emergency" ? "bg-risk-high/10" : 
+                          facility.type === "hospital" ? "bg-primary/10" : "bg-muted"
+                        }`}>
+                          <FacilityIcon className={`h-5 w-5 ${
+                            facility.type === "emergency" ? "text-risk-high" : 
+                            facility.type === "hospital" ? "text-primary" : "text-muted-foreground"
+                          }`} />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">{facility.name}</h4>
+                          <p className="text-sm text-muted-foreground capitalize">{t(`facility.type.${facility.type}`)}</p>
+                          {facility.distance && (
+                            <p className="text-sm text-muted-foreground">{facility.distance.toFixed(1)} km</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* One-tap actions */}
+                    <div className="flex flex-wrap gap-2">
+                      <a href={facility.mapsUrl} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="gap-2" data-testid={`button-directions-${index}`}>
+                          <Navigation className="h-4 w-4" />
+                          {t("facility.directions")}
+                        </Button>
+                      </a>
+                      {facility.phone && (
+                        <a href={`tel:${facility.phone}`}>
+                          <Button variant="outline" size="sm" className="gap-2" data-testid={`button-call-${index}`}>
+                            <Phone className="h-4 w-4" />
+                            {t("facility.call")}
+                          </Button>
+                        </a>
+                      )}
+                      {facility.email && (
+                        <a href={`mailto:${facility.email}`}>
+                          <Button variant="outline" size="sm" className="gap-2" data-testid={`button-email-${index}`}>
+                            <Mail className="h-4 w-4" />
+                            {t("facility.email")}
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Trusted Resources */}
       <Card className="mb-8 border-2">
