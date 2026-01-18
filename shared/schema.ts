@@ -25,16 +25,20 @@ export const locationAccessSchema = z.object({
 
 export type LocationAccess = z.infer<typeof locationAccessSchema>;
 
+// Age group type
+export type AgeGroup = "infant" | "child" | "adolescent" | "adult";
+
 // Assessment form data schema
 export const assessmentSchema = z.object({
-  // Demographics
-  age: z.number().min(18).max(120),
+  // Demographics - supports babies (months) and children/adults (years)
+  ageUnit: z.enum(["years", "months"]),
+  ageValue: z.number().min(0).max(1440), // 0-120 years (1440 months)
   gender: z.enum(["male", "female", "other"]),
   
-  // Physical measurements
-  weight: z.number().min(30).max(300), // kg
-  height: z.number().min(100).max(250), // cm
-  waistCircumference: z.number().min(50).max(200).optional(), // cm
+  // Physical measurements (adjusted for all ages including babies)
+  weight: z.number().min(0.5).max(300), // kg - babies can weigh from 0.5kg
+  height: z.number().min(20).max(250), // cm - newborns average 50cm, premature can be less
+  waistCircumference: z.number().min(20).max(200).optional(), // cm
   
   // Medical history
   familyHistoryDiabetes: z.boolean(),
@@ -43,22 +47,33 @@ export const assessmentSchema = z.object({
   personalHistoryHighCholesterol: z.boolean(),
   previousGestationalDiabetes: z.boolean().optional(), // for females
   
-  // Lifestyle factors
-  physicalActivityLevel: z.enum(["sedentary", "light", "moderate", "active"]),
-  smokingStatus: z.enum(["never", "former", "current"]),
-  dietQuality: z.enum(["poor", "fair", "good", "excellent"]),
-  sleepHours: z.number().min(3).max(14),
-  stressLevel: z.enum(["low", "moderate", "high", "very_high"]),
+  // Lifestyle factors (some only apply to older children/adults)
+  physicalActivityLevel: z.enum(["sedentary", "light", "moderate", "active"]).optional(),
+  smokingStatus: z.enum(["never", "former", "current"]).optional(), // Only for teens/adults
+  dietQuality: z.enum(["poor", "fair", "good", "excellent"]).optional(),
+  sleepHours: z.number().min(3).max(20).optional(), // Babies sleep more
+  stressLevel: z.enum(["low", "moderate", "high", "very_high"]).optional(),
   
-  // Symptoms
-  frequentThirst: z.boolean(),
-  frequentUrination: z.boolean(),
-  unexplainedWeightChange: z.boolean(),
-  fatigue: z.boolean(),
-  blurredVision: z.boolean(),
-  slowHealingWounds: z.boolean(),
-  chestPain: z.boolean(),
-  shortnessOfBreath: z.boolean(),
+  // Infant/child-specific factors
+  feedingType: z.enum(["breastfed", "formula", "mixed", "solid"]).optional(), // For babies
+  growthConcerns: z.boolean().optional(), // Parent notices growth issues
+  excessiveThirst: z.boolean().optional(), // For all ages
+  frequentInfections: z.boolean().optional(), // Common in pediatric diabetes
+  
+  // Symptoms (all ages)
+  frequentThirst: z.boolean().optional(),
+  frequentUrination: z.boolean().optional(),
+  unexplainedWeightChange: z.boolean().optional(),
+  fatigue: z.boolean().optional(),
+  blurredVision: z.boolean().optional(),
+  slowHealingWounds: z.boolean().optional(),
+  chestPain: z.boolean().optional(),
+  shortnessOfBreath: z.boolean().optional(),
+  
+  // Infant-specific symptoms
+  irritability: z.boolean().optional(), // Baby unusually fussy
+  poorFeeding: z.boolean().optional(),
+  wetDiapers: z.enum(["normal", "increased", "decreased"]).optional(),
   
   // Location & Access (optional)
   locationAccess: locationAccessSchema.optional(),

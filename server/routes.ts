@@ -18,6 +18,21 @@ function getBMICategory(bmi: number): string {
   return "obese";
 }
 
+// Get age group from age value and unit
+type AgeGroup = "infant" | "child" | "adolescent" | "adult";
+
+function getAgeGroup(ageValue: number, ageUnit: "years" | "months"): AgeGroup {
+  const ageInMonths = ageUnit === "months" ? ageValue : ageValue * 12;
+  if (ageInMonths <= 24) return "infant"; // 0-2 years (inclusive)
+  if (ageInMonths <= 144) return "child"; // 2-12 years (inclusive)
+  if (ageInMonths < 216) return "adolescent"; // 12-18 years
+  return "adult"; // 18+ years
+}
+
+function getAgeInYears(ageValue: number, ageUnit: "years" | "months"): number {
+  return ageUnit === "months" ? ageValue / 12 : ageValue;
+}
+
 // Calculate risk scores based on assessment data
 function calculateRiskAssessment(data: Assessment): RiskResult {
   let diabetesScore = 0;
@@ -27,65 +42,174 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   // Calculate BMI
   const bmi = calculateBMI(data.weight, data.height);
   const bmiCategory = getBMICategory(bmi);
+  
+  // Get age info
+  const ageGroup = getAgeGroup(data.ageValue, data.ageUnit);
+  const ageInYears = getAgeInYears(data.ageValue, data.ageUnit);
 
-  // Age factor (risk increases after 45)
-  if (data.age >= 65) {
-    diabetesScore += 3;
-    cardiovascularScore += 4;
-    contributingFactors.push({
-      id: "age",
-      nameKey: "factor.age",
-      explanationKey: "factor.age.explanation",
-      severity: "high",
-    });
-  } else if (data.age >= 55) {
-    diabetesScore += 2;
-    cardiovascularScore += 3;
-    contributingFactors.push({
-      id: "age",
-      nameKey: "factor.age",
-      explanationKey: "factor.age.explanation",
-      severity: "medium",
-    });
-  } else if (data.age >= 45) {
-    diabetesScore += 1;
-    cardiovascularScore += 2;
-    contributingFactors.push({
-      id: "age",
-      nameKey: "factor.age",
-      explanationKey: "factor.age.explanation",
-      severity: "low",
-    });
-  }
+  // Age-appropriate risk assessment
+  if (ageGroup === "infant" || ageGroup === "child") {
+    // Pediatric assessment - different risk factors
+    // Focus on Type 1 diabetes warning signs and growth concerns
+    
+    // Pediatric symptoms - use same fields as form
+    if (data.frequentThirst) {
+      diabetesScore += 3;
+      contributingFactors.push({
+        id: "thirst",
+        nameKey: "factor.thirst",
+        explanationKey: "factor.thirst.explanation",
+        severity: "high",
+      });
+    }
+    
+    if (data.frequentUrination) {
+      diabetesScore += 3;
+      contributingFactors.push({
+        id: "urination",
+        nameKey: "factor.urination",
+        explanationKey: "factor.urination.explanation",
+        severity: "high",
+      });
+    }
+    
+    if (data.unexplainedWeightChange) {
+      diabetesScore += 3;
+      contributingFactors.push({
+        id: "weightChange",
+        nameKey: "factor.weightChange",
+        explanationKey: "factor.weightChange.explanation",
+        severity: "high",
+      });
+    }
+    
+    if (data.frequentInfections) {
+      diabetesScore += 2;
+      contributingFactors.push({
+        id: "infections",
+        nameKey: "factor.infections",
+        explanationKey: "factor.infections.explanation",
+        severity: "medium",
+      });
+    }
+    
+    if (data.growthConcerns) {
+      diabetesScore += 1;
+      contributingFactors.push({
+        id: "growth",
+        nameKey: "factor.growth",
+        explanationKey: "factor.growth.explanation",
+        severity: "medium",
+      });
+    }
+    
+    // Infant-specific
+    if (ageGroup === "infant") {
+      if (data.irritability) {
+        diabetesScore += 2;
+        contributingFactors.push({
+          id: "irritability",
+          nameKey: "factor.irritability",
+          explanationKey: "factor.irritability.explanation",
+          severity: "medium",
+        });
+      }
+      
+      if (data.poorFeeding) {
+        diabetesScore += 2;
+        contributingFactors.push({
+          id: "poorFeeding",
+          nameKey: "factor.poorFeeding",
+          explanationKey: "factor.poorFeeding.explanation",
+          severity: "medium",
+        });
+      }
+      
+      if (data.wetDiapers === "increased") {
+        diabetesScore += 2;
+        contributingFactors.push({
+          id: "wetDiapers",
+          nameKey: "factor.wetDiapers",
+          explanationKey: "factor.wetDiapers.explanation",
+          severity: "medium",
+        });
+      }
+    }
+    
+    // Family history still relevant for pediatric
+    if (data.familyHistoryDiabetes) {
+      diabetesScore += 2;
+      contributingFactors.push({
+        id: "family",
+        nameKey: "factor.familyDiabetes",
+        explanationKey: "factor.familyDiabetes.explanation",
+        severity: "medium",
+      });
+    }
+    
+  } else {
+    // Adult/adolescent risk assessment (original logic)
+    // Age factor (risk increases after 45)
+    if (ageInYears >= 65) {
+      diabetesScore += 3;
+      cardiovascularScore += 4;
+      contributingFactors.push({
+        id: "age",
+        nameKey: "factor.age",
+        explanationKey: "factor.age.explanation",
+        severity: "high",
+      });
+    } else if (ageInYears >= 55) {
+      diabetesScore += 2;
+      cardiovascularScore += 3;
+      contributingFactors.push({
+        id: "age",
+        nameKey: "factor.age",
+        explanationKey: "factor.age.explanation",
+        severity: "medium",
+      });
+    } else if (ageInYears >= 45) {
+      diabetesScore += 1;
+      cardiovascularScore += 2;
+      contributingFactors.push({
+        id: "age",
+        nameKey: "factor.age",
+        explanationKey: "factor.age.explanation",
+        severity: "low",
+      });
+    }
+  } // End of adult/adolescent risk assessment
 
-  // BMI factor
-  if (bmi >= 35) {
-    diabetesScore += 4;
-    cardiovascularScore += 3;
-    contributingFactors.push({
-      id: "bmi",
-      nameKey: "factor.bmi",
-      explanationKey: "factor.bmi.explanation",
-      severity: "high",
-    });
-  } else if (bmi >= 30) {
-    diabetesScore += 3;
-    cardiovascularScore += 2;
-    contributingFactors.push({
-      id: "bmi",
-      nameKey: "factor.bmi",
-      explanationKey: "factor.bmi.explanation",
-      severity: "medium",
-    });
-  } else if (bmi >= 25) {
-    diabetesScore += 1;
-    cardiovascularScore += 1;
-    contributingFactors.push({
-      id: "bmi",
-      nameKey: "factor.bmi",
-      explanationKey: "factor.bmi.explanation",
-      severity: "low",
-    });
+  // BMI factor - only for adolescents and adults (pediatric BMI requires different assessment)
+  if (ageGroup === "adolescent" || ageGroup === "adult") {
+    if (bmi >= 35) {
+      diabetesScore += 4;
+      cardiovascularScore += 3;
+      contributingFactors.push({
+        id: "bmi",
+        nameKey: "factor.bmi",
+        explanationKey: "factor.bmi.explanation",
+        severity: "high",
+      });
+    } else if (bmi >= 30) {
+      diabetesScore += 3;
+      cardiovascularScore += 2;
+      contributingFactors.push({
+        id: "bmi",
+        nameKey: "factor.bmi",
+        explanationKey: "factor.bmi.explanation",
+        severity: "medium",
+      });
+    } else if (bmi >= 25) {
+      diabetesScore += 1;
+      cardiovascularScore += 1;
+      contributingFactors.push({
+        id: "bmi",
+        nameKey: "factor.bmi",
+        explanationKey: "factor.bmi.explanation",
+        severity: "low",
+      });
+    }
   }
 
   // Waist circumference (if provided)
@@ -530,10 +654,13 @@ export async function registerRoutes(
   // Health assessment endpoint
   app.post("/api/assess", (req, res) => {
     try {
+      console.log("Received assessment data:", JSON.stringify(req.body, null, 2));
+      
       // Validate input
       const validationResult = assessmentSchema.safeParse(req.body);
       
       if (!validationResult.success) {
+        console.error("Validation errors:", validationResult.error.errors);
         return res.status(400).json({
           success: false,
           error: "Invalid assessment data",

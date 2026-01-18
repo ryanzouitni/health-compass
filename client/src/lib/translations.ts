@@ -55,6 +55,14 @@ export const translations: Record<Language, Record<string, string>> = {
     "step1.desc": "Let's start with some basic information",
     "field.age": "Age",
     "field.age.placeholder": "Enter your age",
+    "field.age.years": "Years",
+    "field.age.months": "Months (for babies)",
+    "field.age.selectMonths": "Select age in months",
+    "field.age.monthsLabel": "months",
+    "field.ageGroup.infant": "Age group: Infant (0-2 years)",
+    "field.ageGroup.child": "Age group: Child (2-12 years)",
+    "field.ageGroup.adolescent": "Age group: Adolescent (12-18 years)",
+    "field.ageGroup.adult": "Age group: Adult (18+ years)",
     "field.gender": "Gender",
     "field.gender.male": "Male",
     "field.gender.female": "Female",
@@ -116,6 +124,17 @@ export const translations: Record<Language, Record<string, string>> = {
     "field.chestPain": "Chest pain or discomfort",
     "field.breathing": "Shortness of breath",
     
+    // Infant/child-specific fields
+    "field.infantSymptoms.desc": "For babies, please indicate if you have noticed any of these signs:",
+    "field.irritability": "Unusual irritability or fussiness",
+    "field.poorFeeding": "Poor feeding or decreased appetite",
+    "field.wetDiapers": "Wet diapers frequency",
+    "field.wetDiapers.normal": "Normal (6-8 wet diapers per day)",
+    "field.wetDiapers.increased": "Increased (more than usual)",
+    "field.wetDiapers.decreased": "Decreased (fewer than usual)",
+    "field.growthConcerns": "Concerns about growth or weight gain",
+    "field.frequentInfections": "Frequent infections (skin, urinary, respiratory)",
+    
     // Results Page
     "results.title": "Your Assessment Results",
     "results.disclaimer": "This is not a medical diagnosis. Please consult a healthcare professional.",
@@ -158,6 +177,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.sleep": "Sleep Pattern",
     "factor.stress": "Stress Level",
     "factor.symptoms": "Current Symptoms",
+    "factor.thirst": "Excessive Thirst",
+    "factor.urination": "Frequent Urination",
+    "factor.weightChange": "Unexplained Weight Change",
+    "factor.frequentInfections": "Frequent Infections",
+    "factor.growthConcerns": "Growth Concerns",
     
     // Factor Explanations
     "factor.age.explanation": "Risk of diabetes and heart disease increases with age, especially after 45 years.",
@@ -173,6 +197,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.sleep.explanation": "Poor sleep affects hormones that control appetite and blood sugar.",
     "factor.stress.explanation": "Chronic stress can raise blood pressure and lead to unhealthy habits.",
     "factor.symptoms.explanation": "These symptoms may indicate early signs of diabetes or heart problems.",
+    "factor.thirst.explanation": "Excessive thirst can be a warning sign of high blood sugar levels.",
+    "factor.urination.explanation": "Frequent urination often accompanies high blood sugar as the body tries to eliminate excess glucose.",
+    "factor.weightChange.explanation": "Unexplained weight loss or gain can indicate metabolic issues including diabetes.",
+    "factor.frequentInfections.explanation": "Recurring infections may indicate weakened immunity related to blood sugar issues.",
+    "factor.growthConcerns.explanation": "In children, growth issues can sometimes be associated with metabolic conditions.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "Lifestyle Suggestions",
@@ -250,8 +279,10 @@ export const translations: Record<Language, Record<string, string>> = {
     // Validation
     "validation.required": "This field is required",
     "validation.ageRange": "Age must be between 18 and 120",
-    "validation.weightRange": "Weight must be between 30 and 300 kg",
-    "validation.heightRange": "Height must be between 100 and 250 cm",
+    "validation.ageYearsRange": "Age must be between 0 and 120 years",
+    "validation.ageMonthsRange": "Age must be between 0 and 23 months",
+    "validation.weightRange": "Please enter a valid weight",
+    "validation.heightRange": "Please enter a valid height",
     
     // Step 6: Location & Access
     "step6.title": "Location & Access to Care",
@@ -415,6 +446,14 @@ export const translations: Record<Language, Record<string, string>> = {
     "step1.desc": "Commençons par quelques informations de base",
     "field.age": "Âge",
     "field.age.placeholder": "Entrez votre âge",
+    "field.age.years": "Années",
+    "field.age.months": "Mois (pour les bébés)",
+    "field.age.selectMonths": "Sélectionnez l'âge en mois",
+    "field.age.monthsLabel": "mois",
+    "field.ageGroup.infant": "Groupe d'âge: Nourrisson (0-2 ans)",
+    "field.ageGroup.child": "Groupe d'âge: Enfant (2-12 ans)",
+    "field.ageGroup.adolescent": "Groupe d'âge: Adolescent (12-18 ans)",
+    "field.ageGroup.adult": "Groupe d'âge: Adulte (18+ ans)",
     "field.gender": "Genre",
     "field.gender.male": "Homme",
     "field.gender.female": "Femme",
@@ -476,6 +515,17 @@ export const translations: Record<Language, Record<string, string>> = {
     "field.chestPain": "Douleur ou gêne thoracique",
     "field.breathing": "Essoufflement",
     
+    // Infant/child-specific fields
+    "field.infantSymptoms.desc": "Pour les bébés, veuillez indiquer si vous avez remarqué l'un de ces signes:",
+    "field.irritability": "Irritabilité ou agitation inhabituelle",
+    "field.poorFeeding": "Alimentation insuffisante ou appétit réduit",
+    "field.wetDiapers": "Fréquence des couches mouillées",
+    "field.wetDiapers.normal": "Normal (6-8 couches mouillées par jour)",
+    "field.wetDiapers.increased": "Augmenté (plus que d'habitude)",
+    "field.wetDiapers.decreased": "Diminué (moins que d'habitude)",
+    "field.growthConcerns": "Préoccupations concernant la croissance ou la prise de poids",
+    "field.frequentInfections": "Infections fréquentes (peau, urinaire, respiratoire)",
+    
     // Results Page
     "results.title": "Résultats de Votre Évaluation",
     "results.disclaimer": "Ceci n'est pas un diagnostic médical. Veuillez consulter un professionnel de santé.",
@@ -518,6 +568,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.sleep": "Habitudes de Sommeil",
     "factor.stress": "Niveau de Stress",
     "factor.symptoms": "Symptômes Actuels",
+    "factor.thirst": "Soif Excessive",
+    "factor.urination": "Mictions Fréquentes",
+    "factor.weightChange": "Changement de Poids Inexpliqué",
+    "factor.frequentInfections": "Infections Fréquentes",
+    "factor.growthConcerns": "Préoccupations de Croissance",
     
     // Factor Explanations
     "factor.age.explanation": "Le risque de diabète et de maladie cardiaque augmente avec l'âge, surtout après 45 ans.",
@@ -533,6 +588,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.sleep.explanation": "Un mauvais sommeil affecte les hormones qui contrôlent l'appétit et la glycémie.",
     "factor.stress.explanation": "Le stress chronique peut augmenter la pression artérielle et mener à des habitudes malsaines.",
     "factor.symptoms.explanation": "Ces symptômes peuvent indiquer des signes précoces de diabète ou de problèmes cardiaques.",
+    "factor.thirst.explanation": "Une soif excessive peut être un signe d'alerte de taux de sucre élevé dans le sang.",
+    "factor.urination.explanation": "Les mictions fréquentes accompagnent souvent les taux de sucre élevés.",
+    "factor.weightChange.explanation": "Une perte ou un gain de poids inexpliqué peut indiquer des problèmes métaboliques.",
+    "factor.frequentInfections.explanation": "Les infections récurrentes peuvent indiquer une immunité affaiblie liée au sucre sanguin.",
+    "factor.growthConcerns.explanation": "Chez les enfants, les problèmes de croissance peuvent être associés à des conditions métaboliques.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "Suggestions de Mode de Vie",
@@ -610,8 +670,10 @@ export const translations: Record<Language, Record<string, string>> = {
     // Validation
     "validation.required": "Ce champ est obligatoire",
     "validation.ageRange": "L'âge doit être entre 18 et 120",
-    "validation.weightRange": "Le poids doit être entre 30 et 300 kg",
-    "validation.heightRange": "La taille doit être entre 100 et 250 cm",
+    "validation.ageYearsRange": "L'âge doit être entre 0 et 120 ans",
+    "validation.ageMonthsRange": "L'âge doit être entre 0 et 23 mois",
+    "validation.weightRange": "Veuillez entrer un poids valide",
+    "validation.heightRange": "Veuillez entrer une taille valide",
     
     // Step 6: Location & Access
     "step6.title": "Localisation et Accès aux Soins",
@@ -775,6 +837,14 @@ export const translations: Record<Language, Record<string, string>> = {
     "step1.desc": "لنبدأ ببعض المعلومات الأساسية",
     "field.age": "العمر",
     "field.age.placeholder": "أدخل عمرك",
+    "field.age.years": "سنوات",
+    "field.age.months": "أشهر (للرضع)",
+    "field.age.selectMonths": "اختر العمر بالأشهر",
+    "field.age.monthsLabel": "شهر",
+    "field.ageGroup.infant": "الفئة العمرية: رضيع (0-2 سنة)",
+    "field.ageGroup.child": "الفئة العمرية: طفل (2-12 سنة)",
+    "field.ageGroup.adolescent": "الفئة العمرية: مراهق (12-18 سنة)",
+    "field.ageGroup.adult": "الفئة العمرية: بالغ (18+ سنة)",
     "field.gender": "الجنس",
     "field.gender.male": "ذكر",
     "field.gender.female": "أنثى",
@@ -836,6 +906,17 @@ export const translations: Record<Language, Record<string, string>> = {
     "field.chestPain": "ألم أو انزعاج في الصدر",
     "field.breathing": "ضيق في التنفس",
     
+    // Infant/child-specific fields
+    "field.infantSymptoms.desc": "للرضع، يرجى الإشارة إذا لاحظت أيًا من هذه العلامات:",
+    "field.irritability": "تهيج أو هياج غير عادي",
+    "field.poorFeeding": "ضعف الرضاعة أو انخفاض الشهية",
+    "field.wetDiapers": "عدد الحفاضات المبللة",
+    "field.wetDiapers.normal": "طبيعي (6-8 حفاضات مبللة يوميًا)",
+    "field.wetDiapers.increased": "زيادة (أكثر من المعتاد)",
+    "field.wetDiapers.decreased": "انخفاض (أقل من المعتاد)",
+    "field.growthConcerns": "مخاوف بشأن النمو أو زيادة الوزن",
+    "field.frequentInfections": "التهابات متكررة (جلد، بولية، تنفسية)",
+    
     // Results Page
     "results.title": "نتائج تقييمك",
     "results.disclaimer": "هذا ليس تشخيصاً طبياً. يرجى استشارة متخصص في الرعاية الصحية.",
@@ -878,6 +959,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.sleep": "نمط النوم",
     "factor.stress": "مستوى الإجهاد",
     "factor.symptoms": "الأعراض الحالية",
+    "factor.thirst": "العطش المفرط",
+    "factor.urination": "التبول المتكرر",
+    "factor.weightChange": "تغير غير مبرر في الوزن",
+    "factor.frequentInfections": "التهابات متكررة",
+    "factor.growthConcerns": "مخاوف بشأن النمو",
     
     // Factor Explanations
     "factor.age.explanation": "يزداد خطر السكري وأمراض القلب مع التقدم في العمر، خاصة بعد 45 سنة.",
@@ -893,6 +979,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.sleep.explanation": "النوم السيء يؤثر على الهرمونات التي تتحكم في الشهية وسكر الدم.",
     "factor.stress.explanation": "الإجهاد المزمن يمكن أن يرفع ضغط الدم ويؤدي إلى عادات غير صحية.",
     "factor.symptoms.explanation": "هذه الأعراض قد تشير إلى علامات مبكرة للسكري أو مشاكل القلب.",
+    "factor.thirst.explanation": "العطش المفرط يمكن أن يكون علامة تحذيرية لارتفاع مستوى السكر في الدم.",
+    "factor.urination.explanation": "التبول المتكرر غالباً ما يصاحب ارتفاع السكر في الدم.",
+    "factor.weightChange.explanation": "تغير الوزن غير المبرر قد يشير إلى مشاكل في التمثيل الغذائي.",
+    "factor.frequentInfections.explanation": "الالتهابات المتكررة قد تشير إلى ضعف المناعة المرتبط بمشاكل السكر.",
+    "factor.growthConcerns.explanation": "عند الأطفال، قد ترتبط مشاكل النمو بحالات التمثيل الغذائي.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "اقتراحات نمط الحياة",
@@ -970,8 +1061,10 @@ export const translations: Record<Language, Record<string, string>> = {
     // Validation
     "validation.required": "هذا الحقل مطلوب",
     "validation.ageRange": "يجب أن يكون العمر بين 18 و 120",
-    "validation.weightRange": "يجب أن يكون الوزن بين 30 و 300 كجم",
-    "validation.heightRange": "يجب أن يكون الطول بين 100 و 250 سم",
+    "validation.ageYearsRange": "يجب أن يكون العمر بين 0 و 120 سنة",
+    "validation.ageMonthsRange": "يجب أن يكون العمر بين 0 و 23 شهرًا",
+    "validation.weightRange": "يرجى إدخال وزن صحيح",
+    "validation.heightRange": "يرجى إدخال طول صحيح",
     
     // Step 6: Location & Access
     "step6.title": "الموقع والوصول إلى الرعاية",
@@ -1135,6 +1228,14 @@ export const translations: Record<Language, Record<string, string>> = {
     "step1.desc": "ⴰⴷ ⵏⵙⵏⵜⵉ ⵙ ⵜⵉⵙⵖⴰⵏⵉⵏ ⵜⵉⴷⵙⵍⴰⵏⵉⵏ",
     "field.age": "ⵜⴰⵎⵣⵉ",
     "field.age.placeholder": "ⵙⴽⵛⵎ ⵜⴰⵎⵣⵉ ⵏⵏⴽ",
+    "field.age.years": "ⵉⵙⴳⴳⴰⵙⵏ",
+    "field.age.months": "ⵡⴰⵢⵢⵓⵔⵏ (ⵉ ⵉⵎⴳⵔⵓⴷⵏ)",
+    "field.age.selectMonths": "ⵙⵜⵉ ⵜⴰⵎⵣⵉ ⵙ ⵡⴰⵢⵢⵓⵔⵏ",
+    "field.age.monthsLabel": "ⵡⴰⵢⵢⵓⵔⵏ",
+    "field.ageGroup.infant": "ⵜⴰⴳⵔⴰⵡⵜ ⵏ ⵜⵎⵣⵉ: ⴰⵎⴳⵔⵓⴷ (0-2 ⵏ ⵓⵙⴳⴳⴰⵙ)",
+    "field.ageGroup.child": "ⵜⴰⴳⵔⴰⵡⵜ ⵏ ⵜⵎⵣⵉ: ⴰⴼⵔⵓⵅ (2-12 ⵏ ⵓⵙⴳⴳⴰⵙ)",
+    "field.ageGroup.adolescent": "ⵜⴰⴳⵔⴰⵡⵜ ⵏ ⵜⵎⵣⵉ: ⴰⵄⵔⵔⵉⵎ (12-18 ⵏ ⵓⵙⴳⴳⴰⵙ)",
+    "field.ageGroup.adult": "ⵜⴰⴳⵔⴰⵡⵜ ⵏ ⵜⵎⵣⵉ: ⴰⵎⵖⴰⵔ (18+ ⵏ ⵓⵙⴳⴳⴰⵙ)",
     "field.gender": "ⵜⴰⵏⴰⵡⵜ",
     "field.gender.male": "ⴰⵔⴳⴰⵣ",
     "field.gender.female": "ⵜⴰⵎⵟⵟⵓⴹⵜ",
@@ -1196,6 +1297,17 @@ export const translations: Record<Language, Record<string, string>> = {
     "field.chestPain": "ⵜⴰⵣⵣⵓⵍⵜ ⴳ ⵉⴷⵎⴰⵔⵏ",
     "field.breathing": "ⵜⴰⵣⵣⵓⵍⵜ ⴳ ⵓⵙⵏⵓⴼⵙ",
     
+    // Infant/child-specific fields
+    "field.infantSymptoms.desc": "ⵉ ⵉⵎⴳⵔⵓⴷⵏ, ⵎⵍ ⴰⵖ ⵉⵙ ⵜⵥⵕⴰⴷ ⵢⴰⵏ ⵙⴳ ⵉⵏⵥⵉⵜⵏ ⴰⴷ:",
+    "field.irritability": "ⵜⵉⵣⵣⵓⴹⵜ ⵓⵔ ⵉⵍⵍⵉⵏ ⵜⴰⵎⴰⵜⴰⵢⵜ",
+    "field.poorFeeding": "ⵜⵉⴽⵛⵉ ⵉⴼⵙⵙⵓⵙⵏ",
+    "field.wetDiapers": "ⵉⵎⴷⵔⴰⵡⵏ ⵉⵣⴷⴳⴰⵏ",
+    "field.wetDiapers.normal": "ⴰⵎⴰⵜⴰⵢ (6-8 ⴳ ⵡⴰⵙⵙ)",
+    "field.wetDiapers.increased": "ⵢⵔⵏⴰ (ⵓⴳⴳⴰⵔ ⵏ ⵜⴰⵎⴰⵜⴰⵢⵜ)",
+    "field.wetDiapers.decreased": "ⵢⵏⵇⵇⵙ (ⵓⴳⴰⵔ ⵏ ⵜⴰⵎⴰⵜⴰⵢⵜ)",
+    "field.growthConcerns": "ⵜⵉⵎⵍⴹⵉⵏ ⵖⴼ ⵓⵎⵖⵓⵔ ⵏⵖ ⴰⵔⵏⵓ ⵏ ⵓⵜⵉⴳ",
+    "field.frequentInfections": "ⵜⵉⵎⴰⴹⵓⵏⵉⵏ ⵢⵜⵜⵓⵖⴰⵍⵏⵉⵏ (ⴰⴳⵍⵉⵎ, ⵜⴰⴱⴰⵡⴰⵍⵜ, ⴰⵙⵏⵓⴼⵙ)",
+    
     // Results Page
     "results.title": "ⵜⵉⵢⴰⴼⵓⵜⵉⵏ ⵏ ⵓⵙⴼⵔⴰⵙ ⵏⵏⴽ",
     "results.disclaimer": "ⴰⴷ ⵓⵔ ⵉⴳⵉ ⵓⵙⵉⵔⵎ ⴰⵎⵙⵏⴼⴰⵔ. ⵙⵜⵛⵉⵔ ⴰⵎⵙⵏⴼⴰⵔ.",
@@ -1238,6 +1350,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.sleep": "ⴰⵎⴳⴳⴰⵍ ⵏ ⵓⴳⵏ",
     "factor.stress": "ⴰⵙⵡⵉⵔ ⵏ ⵓⴱⵔⴰⴽⴰⵏ",
     "factor.symptoms": "ⵉⵏⵥⵉⵜⵏ ⵉⵎⵉⵔⴰⵏⵉⵏ",
+    "factor.thirst": "ⴼⴰⴹ ⵉⵎⵇⵇⵓⵔⵏ",
+    "factor.urination": "ⵜⴰⴱⴰⵡⴰⵍⵜ ⵢⵜⵜⵓⵖⴰⵍⵏⵜ",
+    "factor.weightChange": "ⴰⵙⵏⴼⵍ ⵏ ⵓⵜⵉⴳ ⵓⵔ ⵉⵜⵜⵡⴰⵙⵙⴰⵏ",
+    "factor.frequentInfections": "ⵜⵉⵎⴰⴹⵓⵏⵉⵏ ⵢⵜⵜⵓⵖⴰⵍⵏⵉⵏ",
+    "factor.growthConcerns": "ⵜⵉⵎⵍⴹⵉⵏ ⵖⴼ ⵓⵎⵖⵓⵔ",
     
     // Factor Explanations (simplified Amazigh)
     "factor.age.explanation": "ⵜⵎⴰⴳⵉⵜ ⵏ ⵓⵙⵓⴽⵔ ⴷ ⵜⵎⴰⴹⵓⵏⵜ ⵏ ⵓⵍ ⴷⴰ ⵜⵜⵣⵣⵉⴳⵉⵣ ⵙ ⵜⵎⵣⵉ.",
@@ -1253,6 +1370,11 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.sleep.explanation": "ⵓⴳⵏ ⵉⵏⵣⵏ ⴷⴰ ⵉⵙⵡⵡⵓⵔⵉ ⵖⴼ ⵉⵀⵓⵔⵎⵓⵏⵏ.",
     "factor.stress.explanation": "ⴰⴱⵔⴰⴽⴰⵏ ⵉⵎⵇⵇⵓⵔⵏ ⵉⵣⵎⵔ ⴰⴷ ⵢⵓⵙⵙⵓⴷⵓ ⴰⵙⵓⵔⴼ ⵏ ⵓⵙⵓⴳ.",
     "factor.symptoms.explanation": "ⵉⵏⵥⵉⵜⵏ ⴰⴷ ⵉⵣⵎⵔⵏ ⴰⴷ ⵉⵎⵎⵍⵏ ⵉⵏⵥⵉⵜⵏ ⵉⵎⵣⵡⴰⵔⵓⵜⵏ ⵏ ⵓⵙⵓⴽⵔ.",
+    "factor.thirst.explanation": "ⴼⴰⴹ ⵉⵎⵇⵇⵓⵔⵏ ⵉⵣⵎⵔ ⴰⴷ ⵉⴳ ⵜⴰⵎⴰⵜⴰⵔⵜ ⵏ ⵓⵙⵓⴽⵔ ⴰⵎⴰⵜⴰⵢ.",
+    "factor.urination.explanation": "ⵜⴰⴱⴰⵡⴰⵍⵜ ⵢⵜⵜⵓⵖⴰⵍⵏⵜ ⴷⴰ ⵜⵜⴰⴳⵉ ⴷ ⵓⵙⵓⴽⵔ ⴰⵎⴰⵜⴰⵢ.",
+    "factor.weightChange.explanation": "ⴰⵙⵏⴼⵍ ⵏ ⵓⵜⵉⴳ ⵓⵔ ⵉⵜⵜⵡⴰⵙⵙⴰⵏ ⵉⵣⵎⵔ ⴰⴷ ⵉⵎⵎⵍ ⵉⵎⵓⴽⵔⵉⵙⵏ.",
+    "factor.frequentInfections.explanation": "ⵜⵉⵎⴰⴹⵓⵏⵉⵏ ⵢⵜⵜⵓⵖⴰⵍⵏⵉⵏ ⵣⵎⵔⵏⵜ ⴰⴷ ⵎⵎⵍⵏⵜ ⵜⵉⵍⵉⵍⵍⵉ ⵏ ⵜⵡⵉⵣⵉ.",
+    "factor.growthConcerns.explanation": "ⴳ ⵉⵅⴼⴰⵡⵏ, ⵉⵎⵓⴽⵔⵉⵙⵏ ⵏ ⵓⵎⵖⵓⵔ ⵣⵎⵔⵏ ⴰⴷ ⵜⵜⵡⴰⵎⵓⵔⵙⵏ ⴷ ⵜⵎⴰⴹⵓⵏⵉⵏ.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "ⵉⵙⵜⵓⵛⵉⵏ ⵏ ⵜⵓⴷⵔⵜ",
@@ -1330,8 +1452,10 @@ export const translations: Record<Language, Record<string, string>> = {
     // Validation
     "validation.required": "ⵢⵓⵔ ⴰⴷ ⵉⵍⴰⵇ",
     "validation.ageRange": "ⵜⴰⵎⵣⵉ ⵉⵍⴰⵇ ⴰⴷ ⵜⵉⵍⵉ ⴳⵔ 18 ⴷ 120",
-    "validation.weightRange": "ⴰⵜⵉⴳ ⵉⵍⴰⵇ ⴰⴷ ⵢⵉⵍⵉ ⴳⵔ 30 ⴷ 300 ⴽⴳ",
-    "validation.heightRange": "ⵜⵉⵖⵣⵉ ⵉⵍⴰⵇ ⴰⴷ ⵜⵉⵍⵉ ⴳⵔ 100 ⴷ 250 ⵙⵎ",
+    "validation.ageYearsRange": "ⵜⴰⵎⵣⵉ ⵉⵍⴰⵇ ⴰⴷ ⵜⵉⵍⵉ ⴳⵔ 0 ⴷ 120 ⵏ ⵓⵙⴳⴳⴰⵙ",
+    "validation.ageMonthsRange": "ⵜⴰⵎⵣⵉ ⵉⵍⴰⵇ ⴰⴷ ⵜⵉⵍⵉ ⴳⵔ 0 ⴷ 23 ⵏ ⵡⴰⵢⵓⵔ",
+    "validation.weightRange": "ⴰⵙⵎⴰⵔ ⴰⵜⵉⴳ ⵉⵖⵓⴷⴰⵏ",
+    "validation.heightRange": "ⴰⵙⵎⴰⵔ ⵜⵉⵖⵣⵉ ⵉⵖⵓⴷⴰⵏ",
     
     // Step 6: Location & Access
     "step6.title": "ⴰⴷⵖⴰⵔ ⴷ ⵓⵎⵓⴷⴷⵓ ⵖⵔ ⵜⵓⵙⵙⵏⴰ",

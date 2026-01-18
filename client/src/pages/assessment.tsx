@@ -18,8 +18,19 @@ import { moroccoRegions } from "@shared/facilities";
 
 const TOTAL_STEPS = 6;
 
+type AgeGroup = "infant" | "child" | "adolescent" | "adult";
+
+function getAgeGroup(ageValue: number, ageUnit: "years" | "months"): AgeGroup {
+  const ageInMonths = ageUnit === "months" ? ageValue : ageValue * 12;
+  if (ageInMonths <= 24) return "infant"; // 0-2 years (inclusive)
+  if (ageInMonths <= 144) return "child"; // 2-12 years (inclusive)
+  if (ageInMonths < 216) return "adolescent"; // 12-18 years
+  return "adult"; // 18+ years
+}
+
 interface FormData {
-  age: number;
+  ageUnit: "years" | "months";
+  ageValue: number;
   gender: "male" | "female" | "other";
   weight: number;
   height: number;
@@ -42,6 +53,14 @@ interface FormData {
   slowHealingWounds: boolean;
   chestPain: boolean;
   shortnessOfBreath: boolean;
+  // Infant/child-specific
+  feedingType: "breastfed" | "formula" | "mixed" | "solid" | "";
+  growthConcerns: boolean;
+  frequentInfections: boolean;
+  irritability: boolean;
+  poorFeeding: boolean;
+  wetDiapers: "normal" | "increased" | "decreased" | "";
+  // Location
   locationMethod: "gps" | "manual" | "prefer_not" | "";
   latitude: number | null;
   longitude: number | null;
@@ -55,7 +74,8 @@ interface FormData {
 }
 
 const initialFormData: FormData = {
-  age: 35,
+  ageUnit: "years",
+  ageValue: 35,
   gender: "male",
   weight: 70,
   height: 170,
@@ -78,6 +98,14 @@ const initialFormData: FormData = {
   slowHealingWounds: false,
   chestPain: false,
   shortnessOfBreath: false,
+  // Infant/child-specific
+  feedingType: "",
+  growthConcerns: false,
+  frequentInfections: false,
+  irritability: false,
+  poorFeeding: false,
+  wetDiapers: "",
+  // Location
   locationMethod: "",
   latitude: null,
   longitude: null,
@@ -100,13 +128,18 @@ export default function AssessmentPage() {
 
   const mutation = useMutation({
     mutationFn: async (data: Assessment) => {
+      console.log("Submitting assessment:", JSON.stringify(data, null, 2));
       const response = await apiRequest("POST", "/api/assess", data);
       const result = await response.json();
+      console.log("Assessment result:", JSON.stringify(result, null, 2));
       return result as { success: boolean; result: RiskResult };
     },
     onSuccess: (data) => {
       sessionStorage.setItem("assessmentResult", JSON.stringify(data.result));
       setLocation("/results");
+    },
+    onError: (error) => {
+      console.error("Assessment error:", error);
     },
   });
 
@@ -115,20 +148,33 @@ export default function AssessmentPage() {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
+  const ageGroup = getAgeGroup(formData.ageValue, formData.ageUnit);
+  
   const validateStep = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
-      if (!formData.age || formData.age < 18 || formData.age > 120) {
-        newErrors.age = t("validation.ageRange");
+      // Validate age based on unit
+      if (formData.ageUnit === "months") {
+        if (formData.ageValue < 0 || formData.ageValue > 23) {
+          newErrors.ageValue = t("validation.ageMonthsRange");
+        }
+      } else {
+        if (formData.ageValue < 0 || formData.ageValue > 120) {
+          newErrors.ageValue = t("validation.ageYearsRange");
+        }
       }
     }
 
     if (step === 2) {
-      if (!formData.weight || formData.weight < 30 || formData.weight > 300) {
+      // Adjust weight/height validation based on age
+      const minWeight = ageGroup === "infant" ? 0.5 : ageGroup === "child" ? 5 : 30;
+      const minHeight = ageGroup === "infant" ? 20 : ageGroup === "child" ? 50 : 100;
+      
+      if (!formData.weight || formData.weight < minWeight || formData.weight > 300) {
         newErrors.weight = t("validation.weightRange");
       }
-      if (!formData.height || formData.height < 100 || formData.height > 250) {
+      if (!formData.height || formData.height < minHeight || formData.height > 250) {
         newErrors.height = t("validation.heightRange");
       }
     }
@@ -167,8 +213,11 @@ export default function AssessmentPage() {
       costBarrier: formData.costBarrier as "low" | "moderate" | "high" | undefined,
     } : undefined;
 
+    const currentAgeGroup = getAgeGroup(formData.ageValue, formData.ageUnit);
+    
     const assessmentData: Assessment = {
-      age: formData.age,
+      ageUnit: formData.ageUnit,
+      ageValue: formData.ageValue,
       gender: formData.gender,
       weight: formData.weight,
       height: formData.height,
@@ -177,12 +226,20 @@ export default function AssessmentPage() {
       familyHistoryHeartDisease: formData.familyHistoryHeartDisease,
       personalHistoryHighBloodPressure: formData.personalHistoryHighBloodPressure,
       personalHistoryHighCholesterol: formData.personalHistoryHighCholesterol,
-      previousGestationalDiabetes: formData.gender === "female" ? formData.previousGestationalDiabetes : undefined,
-      physicalActivityLevel: formData.physicalActivityLevel,
-      smokingStatus: formData.smokingStatus,
-      dietQuality: formData.dietQuality,
+      previousGestationalDiabetes: formData.gender === "female" && currentAgeGroup === "adult" ? formData.previousGestationalDiabetes : undefined,
+      // Lifestyle factors - only for adolescents and adults
+      physicalActivityLevel: currentAgeGroup !== "infant" ? formData.physicalActivityLevel : undefined,
+      smokingStatus: currentAgeGroup === "adult" || currentAgeGroup === "adolescent" ? formData.smokingStatus : undefined,
+      dietQuality: currentAgeGroup !== "infant" ? formData.dietQuality : undefined,
       sleepHours: formData.sleepHours,
-      stressLevel: formData.stressLevel,
+      stressLevel: currentAgeGroup === "adult" || currentAgeGroup === "adolescent" ? formData.stressLevel : undefined,
+      // Infant/child-specific
+      feedingType: currentAgeGroup === "infant" && formData.feedingType ? formData.feedingType : undefined,
+      growthConcerns: currentAgeGroup === "infant" || currentAgeGroup === "child" ? formData.growthConcerns : undefined,
+      frequentInfections: currentAgeGroup !== "adult" ? formData.frequentInfections : undefined,
+      irritability: currentAgeGroup === "infant" ? formData.irritability : undefined,
+      poorFeeding: currentAgeGroup === "infant" ? formData.poorFeeding : undefined,
+      wetDiapers: currentAgeGroup === "infant" && formData.wetDiapers ? formData.wetDiapers : undefined,
       frequentThirst: formData.frequentThirst,
       frequentUrination: formData.frequentUrination,
       unexplainedWeightChange: formData.unexplainedWeightChange,
@@ -240,19 +297,68 @@ export default function AssessmentPage() {
           {/* Step 1: Demographics */}
           {step === 1 && (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="age">{t("field.age")}</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  min={18}
-                  max={120}
-                  value={formData.age}
-                  onChange={(e) => updateField("age", parseInt(e.target.value) || 0)}
-                  placeholder={t("field.age.placeholder")}
-                  data-testid="input-age"
-                />
-                {errors.age && <p className="text-sm text-destructive">{errors.age}</p>}
+              <div className="space-y-4">
+                <Label>{t("field.age")}</Label>
+                
+                {/* Age Unit Selection */}
+                <RadioGroup
+                  value={formData.ageUnit}
+                  onValueChange={(value) => {
+                    updateField("ageUnit", value as "years" | "months");
+                    // Reset age value when switching units
+                    if (value === "months") {
+                      updateField("ageValue", 0);
+                    } else {
+                      updateField("ageValue", 1);
+                    }
+                  }}
+                  className="flex flex-wrap gap-4"
+                >
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <RadioGroupItem value="years" id="ageYears" data-testid="radio-age-years" />
+                    <Label htmlFor="ageYears" className="font-normal">{t("field.age.years")}</Label>
+                  </div>
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <RadioGroupItem value="months" id="ageMonths" data-testid="radio-age-months" />
+                    <Label htmlFor="ageMonths" className="font-normal">{t("field.age.months")}</Label>
+                  </div>
+                </RadioGroup>
+
+                {/* Age Value Input */}
+                {formData.ageUnit === "months" ? (
+                  <Select
+                    value={formData.ageValue.toString()}
+                    onValueChange={(value) => updateField("ageValue", parseInt(value))}
+                  >
+                    <SelectTrigger data-testid="select-age-months">
+                      <SelectValue placeholder={t("field.age.selectMonths")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <SelectItem key={i} value={i.toString()}>
+                          {i} {t("field.age.monthsLabel")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="ageValue"
+                    type="number"
+                    min={0}
+                    max={120}
+                    value={formData.ageValue}
+                    onChange={(e) => updateField("ageValue", parseInt(e.target.value) || 0)}
+                    placeholder={t("field.age.placeholder")}
+                    data-testid="input-age"
+                  />
+                )}
+                {errors.ageValue && <p className="text-sm text-destructive">{errors.ageValue}</p>}
+                
+                {/* Age group indicator */}
+                <p className="text-sm text-muted-foreground">
+                  {t(`field.ageGroup.${ageGroup}`)}
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -488,15 +594,92 @@ export default function AssessmentPage() {
           {/* Step 5: Symptoms */}
           {step === 5 && (
             <div className="space-y-4">
+              {/* Infant-specific symptoms */}
+              {ageGroup === "infant" && (
+                <>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t("field.infantSymptoms.desc")}
+                  </p>
+                  
+                  <div className="flex items-start space-x-3 rtl:space-x-reverse">
+                    <Checkbox
+                      id="irritability"
+                      checked={formData.irritability}
+                      onCheckedChange={(checked) => updateField("irritability", !!checked)}
+                      data-testid="checkbox-irritability"
+                    />
+                    <Label htmlFor="irritability" className="font-normal leading-tight">
+                      {t("field.irritability")}
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 rtl:space-x-reverse">
+                    <Checkbox
+                      id="poorFeeding"
+                      checked={formData.poorFeeding}
+                      onCheckedChange={(checked) => updateField("poorFeeding", !!checked)}
+                      data-testid="checkbox-poor-feeding"
+                    />
+                    <Label htmlFor="poorFeeding" className="font-normal leading-tight">
+                      {t("field.poorFeeding")}
+                    </Label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label>{t("field.wetDiapers")}</Label>
+                    <RadioGroup
+                      value={formData.wetDiapers}
+                      onValueChange={(value) => updateField("wetDiapers", value as FormData["wetDiapers"])}
+                      className="space-y-2"
+                    >
+                      {(["normal", "increased", "decreased"] as const).map((option) => (
+                        <div key={option} className="flex items-center space-x-3 rtl:space-x-reverse">
+                          <RadioGroupItem value={option} id={`wetDiapers-${option}`} data-testid={`radio-wet-diapers-${option}`} />
+                          <Label htmlFor={`wetDiapers-${option}`} className="font-normal">
+                            {t(`field.wetDiapers.${option}`)}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                </>
+              )}
+              
+              {/* Child-specific symptoms */}
+              {(ageGroup === "infant" || ageGroup === "child") && (
+                <>
+                  <div className="flex items-start space-x-3 rtl:space-x-reverse">
+                    <Checkbox
+                      id="growthConcerns"
+                      checked={formData.growthConcerns}
+                      onCheckedChange={(checked) => updateField("growthConcerns", !!checked)}
+                      data-testid="checkbox-growth-concerns"
+                    />
+                    <Label htmlFor="growthConcerns" className="font-normal leading-tight">
+                      {t("field.growthConcerns")}
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 rtl:space-x-reverse">
+                    <Checkbox
+                      id="frequentInfections"
+                      checked={formData.frequentInfections}
+                      onCheckedChange={(checked) => updateField("frequentInfections", !!checked)}
+                      data-testid="checkbox-frequent-infections"
+                    />
+                    <Label htmlFor="frequentInfections" className="font-normal leading-tight">
+                      {t("field.frequentInfections")}
+                    </Label>
+                  </div>
+                </>
+              )}
+              
+              {/* Common symptoms for all ages */}
               {[
                 { field: "frequentThirst" as const, label: "field.thirst" },
                 { field: "frequentUrination" as const, label: "field.urination" },
                 { field: "unexplainedWeightChange" as const, label: "field.weightChange" },
                 { field: "fatigue" as const, label: "field.fatigue" },
-                { field: "blurredVision" as const, label: "field.vision" },
-                { field: "slowHealingWounds" as const, label: "field.wounds" },
-                { field: "chestPain" as const, label: "field.chestPain" },
-                { field: "shortnessOfBreath" as const, label: "field.breathing" },
               ].map(({ field, label }) => (
                 <div key={field} className="flex items-start space-x-3 rtl:space-x-reverse">
                   <Checkbox
@@ -510,6 +693,30 @@ export default function AssessmentPage() {
                   </Label>
                 </div>
               ))}
+              
+              {/* Adult/adolescent-only symptoms */}
+              {(ageGroup === "adolescent" || ageGroup === "adult") && (
+                <>
+                  {[
+                    { field: "blurredVision" as const, label: "field.vision" },
+                    { field: "slowHealingWounds" as const, label: "field.wounds" },
+                    { field: "chestPain" as const, label: "field.chestPain" },
+                    { field: "shortnessOfBreath" as const, label: "field.breathing" },
+                  ].map(({ field, label }) => (
+                    <div key={field} className="flex items-start space-x-3 rtl:space-x-reverse">
+                      <Checkbox
+                        id={field}
+                        checked={formData[field]}
+                        onCheckedChange={(checked) => updateField(field, !!checked)}
+                        data-testid={`checkbox-${field}`}
+                      />
+                      <Label htmlFor={field} className="font-normal leading-tight">
+                        {t(label)}
+                      </Label>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
 
