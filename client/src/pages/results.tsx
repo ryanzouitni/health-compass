@@ -629,6 +629,40 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
             </a>
 
             <a
+              href="https://www.dabadoc.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg border p-4 hover-elevate"
+              data-testid="link-dabadoc"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-500/10">
+                <span className="text-sm font-bold text-cyan-500">DD</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">{t("trust.dabadoc")}</p>
+                <p className="text-xs text-muted-foreground">dabadoc.com</p>
+              </div>
+              <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            </a>
+
+            <a
+              href="https://www.med.ma"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg border p-4 hover-elevate"
+              data-testid="link-medma"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
+                <span className="text-sm font-bold text-orange-500">med</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">{t("trust.medma")}</p>
+                <p className="text-xs text-muted-foreground">med.ma</p>
+              </div>
+              <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            </a>
+
+            <a
               href="https://diabetes.org"
               target="_blank"
               rel="noopener noreferrer"

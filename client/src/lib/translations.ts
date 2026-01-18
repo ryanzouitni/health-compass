@@ -41,6 +41,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "trust.who": "World Health Organization",
     "trust.morocco": "Morocco Ministry of Health",
     "trust.cdc": "CDC (Centers for Disease Control)",
+    "trust.dabadoc": "DabaDoc - Find Doctors in Morocco",
+    "trust.medma": "Med.ma - Morocco Healthcare Directory",
     "trust.ada": "American Diabetes Association",
     
     // Assessment Form
@@ -299,6 +301,9 @@ export const translations: Record<Language, Record<string, string>> = {
     "location.preferNot.desc": "We'll show general guidance only",
     "location.detecting": "Detecting your location...",
     "location.detected": "Location detected",
+    "location.accuracy": "Accuracy: within {{meters}} meters",
+    "location.highAccuracy": "High accuracy mode",
+    "location.highAccuracy.desc": "Uses GPS for more precise location (may take longer)",
     "location.error": "Could not detect location. Please enter manually or skip.",
     "location.city": "City/Village",
     "location.city.placeholder": "Enter your city or village",
@@ -432,6 +437,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "trust.who": "Organisation Mondiale de la Santé",
     "trust.morocco": "Ministère de la Santé du Maroc",
     "trust.cdc": "CDC (Centres de Contrôle des Maladies)",
+    "trust.dabadoc": "DabaDoc - Trouver des médecins au Maroc",
+    "trust.medma": "Med.ma - Annuaire santé du Maroc",
     "trust.ada": "Association Américaine du Diabète",
     
     // Assessment Form
@@ -690,6 +697,9 @@ export const translations: Record<Language, Record<string, string>> = {
     "location.preferNot.desc": "Nous afficherons uniquement des conseils généraux",
     "location.detecting": "Détection de votre position...",
     "location.detected": "Position détectée",
+    "location.accuracy": "Précision: dans un rayon de {{meters}} mètres",
+    "location.highAccuracy": "Mode haute précision",
+    "location.highAccuracy.desc": "Utilise le GPS pour une localisation plus précise (peut prendre plus de temps)",
     "location.error": "Impossible de détecter la position. Veuillez entrer manuellement ou ignorer.",
     "location.city": "Ville/Village",
     "location.city.placeholder": "Entrez votre ville ou village",
@@ -823,6 +833,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "trust.who": "منظمة الصحة العالمية",
     "trust.morocco": "وزارة الصحة المغربية",
     "trust.cdc": "مراكز السيطرة على الأمراض",
+    "trust.dabadoc": "دابادوك - ابحث عن أطباء في المغرب",
+    "trust.medma": "ميد.ما - دليل الصحة في المغرب",
     "trust.ada": "الجمعية الأمريكية للسكري",
     
     // Assessment Form
@@ -1081,6 +1093,9 @@ export const translations: Record<Language, Record<string, string>> = {
     "location.preferNot.desc": "سنعرض إرشادات عامة فقط",
     "location.detecting": "جاري اكتشاف موقعك...",
     "location.detected": "تم اكتشاف الموقع",
+    "location.accuracy": "الدقة: في نطاق {{meters}} متر",
+    "location.highAccuracy": "وضع الدقة العالية",
+    "location.highAccuracy.desc": "يستخدم GPS للحصول على موقع أكثر دقة (قد يستغرق وقتاً أطول)",
     "location.error": "تعذر اكتشاف الموقع. يرجى الإدخال يدوياً أو التخطي.",
     "location.city": "المدينة/القرية",
     "location.city.placeholder": "أدخل مدينتك أو قريتك",
@@ -1214,6 +1229,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "trust.who": "ⴰⵙⵇⵇⵉⵎ ⴰⵎⴰⴹⵍⴰⵏ ⵏ ⵜⴷⵓⵙⵉ",
     "trust.morocco": "ⵜⴰⵎⴰⵡⴰⵙⵜ ⵏ ⵜⴷⵓⵙⵉ ⵏ ⵍⵎⵖⵔⵉⴱ",
     "trust.cdc": "ⵉⵙⴰⴳⵓⵔⵏ ⵏ ⵓⵙⵡⵓⴷⴷⵓ ⵏ ⵜⵎⴰⴹⵓⵏⵉⵏ",
+    "trust.dabadoc": "ⴷⴰⴱⴰⴷⵓⴽ - ⴰⴼ ⵉⵎⵙⵏⴼⴰⵔⵏ ⴳ ⵍⵎⵖⵔⵉⴱ",
+    "trust.medma": "ⵎⵉⴷ.ⵎⴰ - ⴰⴳⴳⴰⵍ ⵏ ⵜⴷⵓⵙⵉ ⴳ ⵍⵎⵖⵔⵉⴱ",
     "trust.ada": "ⵜⴰⵎⵓⵏⵜ ⵜⴰⵎⴰⵔⵉⴽⴰⵏⵉⵜ ⵏ ⵓⵙⵓⴽⵔ",
     
     // Assessment Form
@@ -1472,6 +1489,9 @@ export const translations: Record<Language, Record<string, string>> = {
     "location.preferNot.desc": "ⵔⴰⴷ ⵏⵙⵙⴽⵏ ⴽⴰⵏ ⵜⵉⵎⴰⵔⵉⵏ ⵜⵉⵎⴰⵜⴰⵢⵉⵏ",
     "location.detecting": "ⴰⵔ ⵉⵜⵜⵓⵛⵛⴰⴼ ⴰⴷⵖⴰⵔ ⵏⵏⴽ...",
     "location.detected": "ⵉⵜⵜⵓⴰⴼ ⵓⴷⵖⴰⵔ",
+    "location.accuracy": "ⵜⴰⵣⴷⵡⵉⵜ: ⴳ {{meters}} ⵎⵉⵜⵔ",
+    "location.highAccuracy": "ⴰⵙⴽⴽⵉⵔ ⵏ ⵜⵣⴷⵡⵉⵜ ⵜⴰⵅⴰⵜⴰⵔⵜ",
+    "location.highAccuracy.desc": "ⴰⵔ ⵉⵙⵙⵎⵔⴰⵙ GPS ⵉ ⵓⴷⵖⴰⵔ ⵉⵣⴷⵡⵏ ⵓⴳⴳⴰⵔ (ⵉⵣⵎⵔ ⴰⴷ ⵉⴽⴽ ⵡⴰⴽⵓⴷ)",
     "location.error": "ⵓⵔ ⵉⵣⴷⵉ ⴰⴷ ⵢⵉⵍⵉ ⵓⴷⵖⴰⵔ. ⴰⵔⴰ ⵙ ⵓⴼⵓⵙ ⵏⵖⴷ ⵣⵔⵉ.",
     "location.city": "ⵜⴰⵎⴷⵉⵏⵜ/ⵜⴰⴷⴷⴰⵔⵜ",
     "location.city.placeholder": "ⴰⵔⴰ ⵜⴰⵎⴷⵉⵏⵜ ⵏⵖⴷ ⵜⴰⴷⴷⴰⵔⵜ ⵏⵏⴽ",

@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/lib/language-context";
 import { apiRequest } from "@/lib/queryClient";
 import type { Assessment, RiskResult, LocationAccess } from "@shared/schema";
@@ -125,6 +126,8 @@ export default function AssessmentPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [geoStatus, setGeoStatus] = useState<"idle" | "detecting" | "success" | "error">("idle");
+  const [highAccuracy, setHighAccuracy] = useState(false);
+  const [geoAccuracy, setGeoAccuracy] = useState<number | null>(null);
 
   const mutation = useMutation({
     mutationFn: async (data: Assessment) => {
@@ -200,18 +203,22 @@ export default function AssessmentPage() {
   };
 
   const handleSubmit = () => {
-    const locationAccess: LocationAccess | undefined = formData.locationMethod ? {
-      locationMethod: formData.locationMethod as "gps" | "manual" | "prefer_not",
-      latitude: formData.latitude ?? undefined,
-      longitude: formData.longitude ?? undefined,
-      city: formData.city || undefined,
-      province: formData.province || undefined,
-      region: formData.region || undefined,
-      settingType: formData.settingType as "urban" | "rural" | "not_sure" | undefined,
-      distanceToClinic: formData.distanceToClinic as "less_5km" | "5_20km" | "20_50km" | "more_50km" | undefined,
-      transportDifficulty: formData.transportDifficulty as "easy" | "moderate" | "difficult" | undefined,
-      costBarrier: formData.costBarrier as "low" | "moderate" | "high" | undefined,
-    } : undefined;
+    let locationAccess: LocationAccess | undefined = undefined;
+    
+    if (formData.locationMethod && formData.locationMethod !== "prefer_not") {
+      locationAccess = {
+        locationMethod: formData.locationMethod as "gps" | "manual",
+        latitude: formData.latitude ?? undefined,
+        longitude: formData.longitude ?? undefined,
+        city: formData.city || undefined,
+        province: formData.province || undefined,
+        region: formData.region || undefined,
+        settingType: formData.settingType ? formData.settingType as "urban" | "rural" | "not_sure" : undefined,
+        distanceToClinic: formData.distanceToClinic ? formData.distanceToClinic as "less_5km" | "5_20km" | "20_50km" | "more_50km" : undefined,
+        transportDifficulty: formData.transportDifficulty ? formData.transportDifficulty as "easy" | "moderate" | "difficult" : undefined,
+        costBarrier: formData.costBarrier ? formData.costBarrier as "low" | "moderate" | "high" : undefined,
+      };
+    }
 
     const currentAgeGroup = getAgeGroup(formData.ageValue, formData.ageUnit);
     
@@ -254,19 +261,25 @@ export default function AssessmentPage() {
     mutation.mutate(assessmentData);
   };
 
-  const requestGeolocation = () => {
+  const requestGeolocation = (useHighAccuracy: boolean = false) => {
     setGeoStatus("detecting");
+    setGeoAccuracy(null);
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           updateField("latitude", position.coords.latitude);
           updateField("longitude", position.coords.longitude);
+          setGeoAccuracy(position.coords.accuracy);
           setGeoStatus("success");
         },
         () => {
           setGeoStatus("error");
         },
-        { timeout: 10000, enableHighAccuracy: false }
+        { 
+          timeout: useHighAccuracy ? 30000 : 10000, 
+          enableHighAccuracy: useHighAccuracy,
+          maximumAge: useHighAccuracy ? 0 : 60000
+        }
       );
     } else {
       setGeoStatus("error");
@@ -739,7 +752,7 @@ export default function AssessmentPage() {
                   onValueChange={(value) => {
                     updateField("locationMethod", value as FormData["locationMethod"]);
                     if (value === "gps") {
-                      requestGeolocation();
+                      requestGeolocation(highAccuracy);
                     }
                   }}
                   className="space-y-3"
@@ -753,7 +766,26 @@ export default function AssessmentPage() {
                       </Label>
                       <p className="text-sm text-muted-foreground">{t("location.gps.desc")}</p>
                       {formData.locationMethod === "gps" && (
-                        <div className="mt-2">
+                        <div className="mt-3 space-y-3">
+                          <div className="flex items-center justify-between rounded-md bg-muted/50 p-2">
+                            <div className="flex-1">
+                              <Label htmlFor="high-accuracy" className="text-sm font-normal cursor-pointer">
+                                {t("location.highAccuracy")}
+                              </Label>
+                              <p className="text-xs text-muted-foreground">{t("location.highAccuracy.desc")}</p>
+                            </div>
+                            <Switch
+                              id="high-accuracy"
+                              checked={highAccuracy}
+                              onCheckedChange={(checked) => {
+                                setHighAccuracy(checked);
+                                if (geoStatus !== "detecting") {
+                                  requestGeolocation(checked);
+                                }
+                              }}
+                              data-testid="switch-high-accuracy"
+                            />
+                          </div>
                           {geoStatus === "detecting" && (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -761,9 +793,16 @@ export default function AssessmentPage() {
                             </div>
                           )}
                           {geoStatus === "success" && (
-                            <div className="flex items-center gap-2 text-sm text-green-600">
-                              <MapPin className="h-4 w-4" />
-                              {t("location.detected")}
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-green-600">
+                                <MapPin className="h-4 w-4" />
+                                {t("location.detected")}
+                              </div>
+                              {geoAccuracy !== null && (
+                                <p className="text-xs text-muted-foreground">
+                                  {t("location.accuracy", { meters: Math.round(geoAccuracy) })}
+                                </p>
+                              )}
                             </div>
                           )}
                           {geoStatus === "error" && (
