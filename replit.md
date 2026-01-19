@@ -35,6 +35,20 @@ Preferred communication style: Simple, everyday language.
 - Stateless API design - assessments are calculated server-side but not persisted
 - In-memory storage interface allows future database integration without code changes
 - Risk calculation algorithm based on WHO and CDC guidelines for diabetes/cardiovascular risk
+- Comprehensive symptom tracking with 30+ predefined symptoms plus free-text custom symptom input
+
+### Symptom Tracking System
+The platform includes an expanded symptom tracking system organized by category:
+- **Common Symptoms (all ages)**: thirst, urination, weight change, fatigue, frequent hunger, dry mouth
+- **Additional Adult Symptoms**: numbness/tingling, dizziness, itchy skin, muscle cramps, headaches, sweating, skin changes (acanthosis nigricans), blurred vision, slow wound healing
+- **Heart-Related Symptoms**: chest pain, shortness of breath, irregular heartbeat, swollen feet/ankles
+- **Pediatric Symptoms**: bedwetting, lethargy, fruity breath (DKA sign), vomiting, irritability, poor feeding, wet diaper changes, growth concerns
+- **Custom Symptoms**: Free-text input for any symptoms not covered by predefined options
+
+Custom symptoms are factored into the risk evaluation:
+- Add +1 to both diabetes and cardiovascular risk scores
+- Create a "Additional Reported Symptoms" contributing factor displayed in results
+- Trigger "see a doctor soon" urgency recommendation
 
 ### Data Flow
 1. User completes multi-step assessment form on frontend

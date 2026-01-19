@@ -346,7 +346,7 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   }
 
   // Sleep
-  if (data.sleepHours < 6 || data.sleepHours > 9) {
+  if (data.sleepHours && (data.sleepHours < 6 || data.sleepHours > 9)) {
     diabetesScore += 1;
     cardiovascularScore += 1;
     contributingFactors.push({
@@ -376,20 +376,49 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     });
   }
 
-  // Symptoms
-  const symptomCount = [
+  // Symptoms - expanded list
+  const diabetesSymptomCount = [
     data.frequentThirst,
     data.frequentUrination,
     data.unexplainedWeightChange,
     data.fatigue,
     data.blurredVision,
     data.slowHealingWounds,
+    data.numbnessTingling,
+    data.frequentHunger,
+    data.dryMouth,
+    data.itchySkin,
+    data.skinChanges,
+  ].filter(Boolean).length;
+  
+  // Additional symptoms that contribute to overall health concern
+  const additionalSymptomCount = [
+    data.dizziness,
+    data.muscleCramps,
+    data.headaches,
+    data.nausea,
+    data.excessiveSweating,
   ].filter(Boolean).length;
 
   const cardioSymptomCount = [
     data.chestPain,
     data.shortnessOfBreath,
+    data.irregularHeartbeat,
+    data.swollenFeetAnkles,
   ].filter(Boolean).length;
+  
+  // Pediatric-specific urgent symptoms (DKA warning signs)
+  const pediatricUrgentSymptoms = [
+    data.fruityBreath,
+    data.lethargy,
+    data.vomiting,
+  ].filter(Boolean).length;
+  
+  // Custom symptoms contribute to risk if present
+  const hasCustomSymptoms = data.customSymptoms && data.customSymptoms.trim().length > 0;
+  
+  // Combined symptom count for scoring
+  const symptomCount = diabetesSymptomCount;
 
   if (symptomCount >= 3) {
     diabetesScore += 4;
@@ -417,10 +446,49 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     });
   }
 
-  if (cardioSymptomCount >= 2) {
+  if (cardioSymptomCount >= 3) {
+    cardiovascularScore += 6;
+    contributingFactors.push({
+      id: "cardioSymptoms",
+      nameKey: "factor.cardioSymptoms",
+      explanationKey: "factor.cardioSymptoms.explanation",
+      severity: "high",
+    });
+  } else if (cardioSymptomCount >= 2) {
     cardiovascularScore += 5;
   } else if (cardioSymptomCount >= 1) {
     cardiovascularScore += 3;
+  }
+  
+  // Additional symptoms add minor risk
+  if (additionalSymptomCount >= 3) {
+    diabetesScore += 1;
+    cardiovascularScore += 1;
+  }
+  
+  // Custom symptoms add to risk if present (person is concerned enough to report them)
+  if (hasCustomSymptoms) {
+    diabetesScore += 1;
+    cardiovascularScore += 1;
+    contributingFactors.push({
+      id: "customSymptoms",
+      nameKey: "factor.customSymptoms",
+      explanationKey: "factor.customSymptoms.explanation",
+      severity: "medium",
+    });
+  }
+  
+  // Pediatric urgent symptoms (potential DKA) - critical
+  if (pediatricUrgentSymptoms >= 2) {
+    diabetesScore += 4;
+    contributingFactors.push({
+      id: "pediatricUrgent",
+      nameKey: "factor.pediatricUrgent",
+      explanationKey: "factor.pediatricUrgent.explanation",
+      severity: "high",
+    });
+  } else if (pediatricUrgentSymptoms >= 1) {
+    diabetesScore += 2;
   }
 
   // Determine risk levels
@@ -444,14 +512,18 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     diabetesRisk === "high" || cardiovascularRisk === "high" ? "high" :
     diabetesRisk === "moderate" || cardiovascularRisk === "moderate" ? "moderate" : "low";
 
-  // Determine urgency
+  // Determine urgency - expanded to include new urgent symptoms
   let urgency: UrgencyLevel = "monitor";
   
-  if (data.chestPain || data.shortnessOfBreath) {
+  // Urgent conditions
+  if (data.chestPain || data.shortnessOfBreath || data.irregularHeartbeat) {
     urgency = "urgent";
-  } else if (overallRisk === "high" || symptomCount >= 3) {
+  } else if (pediatricUrgentSymptoms >= 2) {
+    // Pediatric DKA warning signs are urgent
+    urgency = "urgent";
+  } else if (overallRisk === "high" || symptomCount >= 3 || cardioSymptomCount >= 2) {
     urgency = "see_doctor_soon";
-  } else if (overallRisk === "moderate") {
+  } else if (overallRisk === "moderate" || hasCustomSymptoms) {
     urgency = "see_doctor_soon";
   }
 
@@ -494,7 +566,7 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     });
   }
 
-  if (data.sleepHours < 7 || data.sleepHours > 8) {
+  if (data.sleepHours && (data.sleepHours < 7 || data.sleepHours > 8)) {
     lifestyleSuggestions.push({
       id: "sleep",
       titleKey: "lifestyle.sleep.title",

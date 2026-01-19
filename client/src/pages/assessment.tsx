@@ -12,6 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/lib/language-context";
 import { apiRequest } from "@/lib/queryClient";
 import type { Assessment, RiskResult, LocationAccess } from "@shared/schema";
@@ -291,10 +292,30 @@ export default function AssessmentPage() {
       frequentUrination: formData.frequentUrination,
       unexplainedWeightChange: formData.unexplainedWeightChange,
       fatigue: formData.fatigue,
-      blurredVision: formData.blurredVision,
-      slowHealingWounds: formData.slowHealingWounds,
-      chestPain: formData.chestPain,
-      shortnessOfBreath: formData.shortnessOfBreath,
+      blurredVision: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.blurredVision : undefined,
+      slowHealingWounds: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.slowHealingWounds : undefined,
+      chestPain: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.chestPain : undefined,
+      shortnessOfBreath: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.shortnessOfBreath : undefined,
+      // Expanded symptom list
+      numbnessTingling: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.numbnessTingling : undefined,
+      dizziness: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.dizziness : undefined,
+      frequentHunger: formData.frequentHunger,
+      dryMouth: formData.dryMouth,
+      itchySkin: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.itchySkin : undefined,
+      muscleCramps: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.muscleCramps : undefined,
+      headaches: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.headaches : undefined,
+      nausea: formData.nausea,
+      excessiveSweating: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.excessiveSweating : undefined,
+      skinChanges: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.skinChanges : undefined,
+      irregularHeartbeat: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.irregularHeartbeat : undefined,
+      swollenFeetAnkles: currentAgeGroup === "adolescent" || currentAgeGroup === "adult" ? formData.swollenFeetAnkles : undefined,
+      // Pediatric-specific symptoms
+      bedwetting: currentAgeGroup === "child" ? formData.bedwetting : undefined,
+      lethargy: currentAgeGroup === "infant" || currentAgeGroup === "child" ? formData.lethargy : undefined,
+      fruityBreath: currentAgeGroup === "infant" || currentAgeGroup === "child" ? formData.fruityBreath : undefined,
+      vomiting: currentAgeGroup === "infant" || currentAgeGroup === "child" ? formData.vomiting : undefined,
+      // Custom symptoms
+      customSymptoms: formData.customSymptoms.trim() || undefined,
       locationAccess,
     };
 
@@ -646,37 +667,33 @@ export default function AssessmentPage() {
 
           {/* Step 5: Symptoms */}
           {step === 5 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Infant-specific symptoms */}
               {ageGroup === "infant" && (
-                <>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
                     {t("field.infantSymptoms.desc")}
                   </p>
                   
-                  <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                    <Checkbox
-                      id="irritability"
-                      checked={formData.irritability}
-                      onCheckedChange={(checked) => updateField("irritability", !!checked)}
-                      data-testid="checkbox-irritability"
-                    />
-                    <Label htmlFor="irritability" className="font-normal leading-tight">
-                      {t("field.irritability")}
-                    </Label>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                    <Checkbox
-                      id="poorFeeding"
-                      checked={formData.poorFeeding}
-                      onCheckedChange={(checked) => updateField("poorFeeding", !!checked)}
-                      data-testid="checkbox-poor-feeding"
-                    />
-                    <Label htmlFor="poorFeeding" className="font-normal leading-tight">
-                      {t("field.poorFeeding")}
-                    </Label>
-                  </div>
+                  {[
+                    { field: "irritability" as const, label: "field.irritability" },
+                    { field: "poorFeeding" as const, label: "field.poorFeeding" },
+                    { field: "lethargy" as const, label: "field.lethargy" },
+                    { field: "vomiting" as const, label: "field.vomiting" },
+                    { field: "fruityBreath" as const, label: "field.fruityBreath" },
+                  ].map(({ field, label }) => (
+                    <div key={field} className="flex items-start space-x-3 rtl:space-x-reverse">
+                      <Checkbox
+                        id={field}
+                        checked={formData[field]}
+                        onCheckedChange={(checked) => updateField(field, !!checked)}
+                        data-testid={`checkbox-${field}`}
+                      />
+                      <Label htmlFor={field} className="font-normal leading-tight">
+                        {t(label)}
+                      </Label>
+                    </div>
+                  ))}
                   
                   <div className="space-y-3">
                     <Label>{t("field.wetDiapers")}</Label>
@@ -695,66 +712,27 @@ export default function AssessmentPage() {
                       ))}
                     </RadioGroup>
                   </div>
-                </>
-              )}
-              
-              {/* Child-specific symptoms */}
-              {(ageGroup === "infant" || ageGroup === "child") && (
-                <>
-                  <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                    <Checkbox
-                      id="growthConcerns"
-                      checked={formData.growthConcerns}
-                      onCheckedChange={(checked) => updateField("growthConcerns", !!checked)}
-                      data-testid="checkbox-growth-concerns"
-                    />
-                    <Label htmlFor="growthConcerns" className="font-normal leading-tight">
-                      {t("field.growthConcerns")}
-                    </Label>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                    <Checkbox
-                      id="frequentInfections"
-                      checked={formData.frequentInfections}
-                      onCheckedChange={(checked) => updateField("frequentInfections", !!checked)}
-                      data-testid="checkbox-frequent-infections"
-                    />
-                    <Label htmlFor="frequentInfections" className="font-normal leading-tight">
-                      {t("field.frequentInfections")}
-                    </Label>
-                  </div>
-                </>
-              )}
-              
-              {/* Common symptoms for all ages */}
-              {[
-                { field: "frequentThirst" as const, label: "field.thirst" },
-                { field: "frequentUrination" as const, label: "field.urination" },
-                { field: "unexplainedWeightChange" as const, label: "field.weightChange" },
-                { field: "fatigue" as const, label: "field.fatigue" },
-              ].map(({ field, label }) => (
-                <div key={field} className="flex items-start space-x-3 rtl:space-x-reverse">
-                  <Checkbox
-                    id={field}
-                    checked={formData[field]}
-                    onCheckedChange={(checked) => updateField(field, !!checked)}
-                    data-testid={`checkbox-${field}`}
-                  />
-                  <Label htmlFor={field} className="font-normal leading-tight">
-                    {t(label)}
-                  </Label>
                 </div>
-              ))}
+              )}
               
-              {/* Adult/adolescent-only symptoms */}
-              {(ageGroup === "adolescent" || ageGroup === "adult") && (
-                <>
+              {/* Child-specific symptoms (including infants) */}
+              {(ageGroup === "infant" || ageGroup === "child") && (
+                <div className="space-y-4">
+                  {ageGroup === "child" && (
+                    <p className="text-sm text-muted-foreground">
+                      {t("field.childSymptoms.desc")}
+                    </p>
+                  )}
+                  
                   {[
-                    { field: "blurredVision" as const, label: "field.vision" },
-                    { field: "slowHealingWounds" as const, label: "field.wounds" },
-                    { field: "chestPain" as const, label: "field.chestPain" },
-                    { field: "shortnessOfBreath" as const, label: "field.breathing" },
+                    { field: "growthConcerns" as const, label: "field.growthConcerns" },
+                    { field: "frequentInfections" as const, label: "field.frequentInfections" },
+                    ...(ageGroup === "child" ? [
+                      { field: "bedwetting" as const, label: "field.bedwetting" },
+                      { field: "lethargy" as const, label: "field.lethargy" },
+                      { field: "vomiting" as const, label: "field.vomiting" },
+                      { field: "fruityBreath" as const, label: "field.fruityBreath" },
+                    ] : []),
                   ].map(({ field, label }) => (
                     <div key={field} className="flex items-start space-x-3 rtl:space-x-reverse">
                       <Checkbox
@@ -768,8 +746,108 @@ export default function AssessmentPage() {
                       </Label>
                     </div>
                   ))}
-                </>
+                </div>
               )}
+              
+              {/* Common symptoms for all ages */}
+              <div className="space-y-4">
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("field.commonSymptoms.title")}
+                </p>
+                {[
+                  { field: "frequentThirst" as const, label: "field.thirst" },
+                  { field: "frequentUrination" as const, label: "field.urination" },
+                  { field: "unexplainedWeightChange" as const, label: "field.weightChange" },
+                  { field: "fatigue" as const, label: "field.fatigue" },
+                  { field: "frequentHunger" as const, label: "field.frequentHunger" },
+                  { field: "dryMouth" as const, label: "field.dryMouth" },
+                  { field: "nausea" as const, label: "field.nausea" },
+                ].map(({ field, label }) => (
+                  <div key={field} className="flex items-start space-x-3 rtl:space-x-reverse">
+                    <Checkbox
+                      id={field}
+                      checked={formData[field]}
+                      onCheckedChange={(checked) => updateField(field, !!checked)}
+                      data-testid={`checkbox-${field}`}
+                    />
+                    <Label htmlFor={field} className="font-normal leading-tight">
+                      {t(label)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Adult/adolescent-only symptoms */}
+              {(ageGroup === "adolescent" || ageGroup === "adult") && (
+                <div className="space-y-4">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t("field.additionalSymptoms.title")}
+                  </p>
+                  {[
+                    { field: "blurredVision" as const, label: "field.vision" },
+                    { field: "slowHealingWounds" as const, label: "field.wounds" },
+                    { field: "numbnessTingling" as const, label: "field.numbnessTingling" },
+                    { field: "dizziness" as const, label: "field.dizziness" },
+                    { field: "itchySkin" as const, label: "field.itchySkin" },
+                    { field: "muscleCramps" as const, label: "field.muscleCramps" },
+                    { field: "headaches" as const, label: "field.headaches" },
+                    { field: "excessiveSweating" as const, label: "field.excessiveSweating" },
+                    { field: "skinChanges" as const, label: "field.skinChanges" },
+                  ].map(({ field, label }) => (
+                    <div key={field} className="flex items-start space-x-3 rtl:space-x-reverse">
+                      <Checkbox
+                        id={field}
+                        checked={formData[field]}
+                        onCheckedChange={(checked) => updateField(field, !!checked)}
+                        data-testid={`checkbox-${field}`}
+                      />
+                      <Label htmlFor={field} className="font-normal leading-tight">
+                        {t(label)}
+                      </Label>
+                    </div>
+                  ))}
+                  
+                  <p className="text-sm font-medium text-muted-foreground pt-2">
+                    {t("field.heartSymptoms.title")}
+                  </p>
+                  {[
+                    { field: "chestPain" as const, label: "field.chestPain" },
+                    { field: "shortnessOfBreath" as const, label: "field.breathing" },
+                    { field: "irregularHeartbeat" as const, label: "field.irregularHeartbeat" },
+                    { field: "swollenFeetAnkles" as const, label: "field.swollenFeetAnkles" },
+                  ].map(({ field, label }) => (
+                    <div key={field} className="flex items-start space-x-3 rtl:space-x-reverse">
+                      <Checkbox
+                        id={field}
+                        checked={formData[field]}
+                        onCheckedChange={(checked) => updateField(field, !!checked)}
+                        data-testid={`checkbox-${field}`}
+                      />
+                      <Label htmlFor={field} className="font-normal leading-tight">
+                        {t(label)}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Custom symptoms text input */}
+              <div className="space-y-3 pt-4 border-t">
+                <Label htmlFor="customSymptoms" className="font-medium">
+                  {t("field.customSymptoms.title")}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {t("field.customSymptoms.desc")}
+                </p>
+                <Textarea
+                  id="customSymptoms"
+                  value={formData.customSymptoms}
+                  onChange={(e) => updateField("customSymptoms", e.target.value)}
+                  placeholder={t("field.customSymptoms.placeholder")}
+                  className="min-h-[80px] resize-none"
+                  data-testid="textarea-custom-symptoms"
+                />
+              </div>
             </div>
           )}
 
