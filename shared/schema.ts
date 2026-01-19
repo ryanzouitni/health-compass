@@ -70,10 +70,33 @@ export const assessmentSchema = z.object({
   chestPain: z.boolean().optional(),
   shortnessOfBreath: z.boolean().optional(),
   
+  // Additional symptoms (expanded list)
+  numbnessTingling: z.boolean().optional(), // Numbness/tingling in hands or feet
+  dizziness: z.boolean().optional(),
+  frequentHunger: z.boolean().optional(), // Polyphagia
+  dryMouth: z.boolean().optional(),
+  itchySkin: z.boolean().optional(),
+  muscleCramps: z.boolean().optional(),
+  headaches: z.boolean().optional(),
+  nausea: z.boolean().optional(),
+  excessiveSweating: z.boolean().optional(),
+  skinChanges: z.boolean().optional(), // Darkening of skin folds (acanthosis nigricans)
+  irregularHeartbeat: z.boolean().optional(),
+  swollenFeetAnkles: z.boolean().optional(),
+  
   // Infant-specific symptoms
   irritability: z.boolean().optional(), // Baby unusually fussy
   poorFeeding: z.boolean().optional(),
   wetDiapers: z.enum(["normal", "increased", "decreased"]).optional(),
+  
+  // Pediatric-specific symptoms
+  bedwetting: z.boolean().optional(), // For older children who were previously dry
+  lethargy: z.boolean().optional(), // Unusual tiredness
+  fruityBreath: z.boolean().optional(), // Sign of DKA
+  vomiting: z.boolean().optional(),
+  
+  // Custom/unlisted symptoms
+  customSymptoms: z.string().optional(), // Free-text for symptoms not listed
   
   // Location & Access (optional)
   locationAccess: locationAccessSchema.optional(),

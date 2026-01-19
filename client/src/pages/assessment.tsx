@@ -54,6 +54,19 @@ interface FormData {
   slowHealingWounds: boolean;
   chestPain: boolean;
   shortnessOfBreath: boolean;
+  // Additional symptoms (expanded list)
+  numbnessTingling: boolean;
+  dizziness: boolean;
+  frequentHunger: boolean;
+  dryMouth: boolean;
+  itchySkin: boolean;
+  muscleCramps: boolean;
+  headaches: boolean;
+  nausea: boolean;
+  excessiveSweating: boolean;
+  skinChanges: boolean;
+  irregularHeartbeat: boolean;
+  swollenFeetAnkles: boolean;
   // Infant/child-specific
   feedingType: "breastfed" | "formula" | "mixed" | "solid" | "";
   growthConcerns: boolean;
@@ -61,6 +74,13 @@ interface FormData {
   irritability: boolean;
   poorFeeding: boolean;
   wetDiapers: "normal" | "increased" | "decreased" | "";
+  // Pediatric-specific
+  bedwetting: boolean;
+  lethargy: boolean;
+  fruityBreath: boolean;
+  vomiting: boolean;
+  // Custom symptoms
+  customSymptoms: string;
   // Location
   locationMethod: "gps" | "manual" | "prefer_not" | "";
   latitude: number | null;
@@ -99,6 +119,19 @@ const initialFormData: FormData = {
   slowHealingWounds: false,
   chestPain: false,
   shortnessOfBreath: false,
+  // Additional symptoms (expanded list)
+  numbnessTingling: false,
+  dizziness: false,
+  frequentHunger: false,
+  dryMouth: false,
+  itchySkin: false,
+  muscleCramps: false,
+  headaches: false,
+  nausea: false,
+  excessiveSweating: false,
+  skinChanges: false,
+  irregularHeartbeat: false,
+  swollenFeetAnkles: false,
   // Infant/child-specific
   feedingType: "",
   growthConcerns: false,
@@ -106,6 +139,13 @@ const initialFormData: FormData = {
   irritability: false,
   poorFeeding: false,
   wetDiapers: "",
+  // Pediatric-specific
+  bedwetting: false,
+  lethargy: false,
+  fruityBreath: false,
+  vomiting: false,
+  // Custom symptoms
+  customSymptoms: "",
   // Location
   locationMethod: "",
   latitude: null,
