@@ -504,27 +504,61 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     return "low";
   };
 
-  const diabetesRisk = getDiabetesRisk(diabetesScore);
-  const cardiovascularRisk = getCardiovascularRisk(cardiovascularScore);
-
+  // Determine urgency FIRST - this affects risk levels
+  let urgency: UrgencyLevel = "monitor";
+  let hasUrgentCardioSymptoms = false;
+  let hasPediatricUrgentSymptoms = false;
+  
+  // Check for urgent conditions that require immediate attention
+  if (data.chestPain || data.shortnessOfBreath || data.irregularHeartbeat) {
+    urgency = "urgent";
+    hasUrgentCardioSymptoms = true;
+    // Add contributing factor for urgent cardiovascular symptoms
+    contributingFactors.push({
+      id: "urgentCardio",
+      nameKey: "factor.urgentCardio",
+      explanationKey: "factor.urgentCardio.explanation",
+      severity: "high",
+    });
+  }
+  
+  if (pediatricUrgentSymptoms >= 2) {
+    urgency = "urgent";
+    hasPediatricUrgentSymptoms = true;
+  }
+  
+  // Calculate base risk levels
+  let diabetesRisk = getDiabetesRisk(diabetesScore);
+  let cardiovascularRisk = getCardiovascularRisk(cardiovascularScore);
+  
+  // IMPORTANT: When urgent symptoms are present, risk levels must be at least moderate
+  // to avoid contradictory messaging (low risk but urgent action)
+  if (hasUrgentCardioSymptoms) {
+    // Chest pain, shortness of breath, or irregular heartbeat = at least moderate cardio risk
+    if (cardiovascularRisk === "low") {
+      cardiovascularRisk = "moderate";
+    }
+  }
+  
+  if (hasPediatricUrgentSymptoms) {
+    // Pediatric DKA signs = at least moderate diabetes risk
+    if (diabetesRisk === "low") {
+      diabetesRisk = "moderate";
+    }
+  }
+  
   // Overall risk is the higher of the two
   const overallRisk: RiskLevel = 
     diabetesRisk === "high" || cardiovascularRisk === "high" ? "high" :
     diabetesRisk === "moderate" || cardiovascularRisk === "moderate" ? "moderate" : "low";
 
-  // Determine urgency - expanded to include new urgent symptoms
-  let urgency: UrgencyLevel = "monitor";
-  
-  // Urgent conditions
-  if (data.chestPain || data.shortnessOfBreath || data.irregularHeartbeat) {
-    urgency = "urgent";
-  } else if (pediatricUrgentSymptoms >= 2) {
-    // Pediatric DKA warning signs are urgent
-    urgency = "urgent";
-  } else if (overallRisk === "high" || symptomCount >= 3 || cardioSymptomCount >= 2) {
-    urgency = "see_doctor_soon";
-  } else if (overallRisk === "moderate" || hasCustomSymptoms) {
-    urgency = "see_doctor_soon";
+  // Set remaining urgency levels based on overall risk
+  if (urgency !== "urgent") {
+    if (overallRisk === "high" || symptomCount >= 3 || cardioSymptomCount >= 2) {
+      urgency = "see_doctor_soon";
+    } else if (overallRisk === "moderate" || hasCustomSymptoms) {
+      urgency = "see_doctor_soon";
+    }
   }
 
   // Generate lifestyle suggestions based on risk factors
