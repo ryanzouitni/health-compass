@@ -417,6 +417,15 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   // Custom symptoms contribute to risk if present
   const hasCustomSymptoms = data.customSymptoms && data.customSymptoms.trim().length > 0;
   
+  // Check if custom symptoms text contains urgent keywords that should trigger urgent pathway
+  const customSymptomsLower = (data.customSymptoms || "").toLowerCase();
+  const urgentKeywordsInCustom = {
+    chestPain: /chest\s*(pain|pressure|tightness|discomfort)|heart\s*(pain|attack)|cardiac|angina/i.test(customSymptomsLower),
+    shortnessOfBreath: /short(ness)?\s*(of)?\s*breath|breathing\s*(difficulty|problem|trouble)|can('t|not)\s*breathe|difficulty\s*breathing|breathless/i.test(customSymptomsLower),
+    irregularHeartbeat: /irregular\s*(heart\s*)?beat|heart\s*(palpitation|racing|flutter|skip)|arrhythmia|rapid\s*heart/i.test(customSymptomsLower),
+  };
+  const hasUrgentKeywordsInCustom = urgentKeywordsInCustom.chestPain || urgentKeywordsInCustom.shortnessOfBreath || urgentKeywordsInCustom.irregularHeartbeat;
+  
   // Combined symptom count for scoring
   const symptomCount = diabetesSymptomCount;
 
@@ -510,7 +519,10 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   let hasPediatricUrgentSymptoms = false;
   
   // Check for urgent conditions that require immediate attention
-  if (data.chestPain || data.shortnessOfBreath || data.irregularHeartbeat) {
+  // This includes BOTH checkboxes AND urgent keywords detected in custom symptoms text
+  const hasUrgentCardioCheckbox = data.chestPain || data.shortnessOfBreath || data.irregularHeartbeat;
+  
+  if (hasUrgentCardioCheckbox || hasUrgentKeywordsInCustom) {
     urgency = "urgent";
     hasUrgentCardioSymptoms = true;
     // Add contributing factor for urgent cardiovascular symptoms
