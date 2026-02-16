@@ -1,0 +1,233 @@
+1) Biggest product limitation: it looks like “triage/diagnosis” even if you say it isn’t
+
+Right now you present:
+
+“Recommended Action: Urgent – See a Doctor Now”
+
+“Risk level: Moderate / High”
+
+“Nearby facilities”
+
+That feels like clinical triage, not just “orientation.” The disclaimer helps, but the UI still pushes users toward treating it like medical guidance.
+
+Improvements
+
+Rename outputs so they’re clearly orientation tiers, not “risk of disease.”
+
+Example: “Urgency right now (symptoms)” vs “Long-term risk factors (prevention)”
+
+Add a hard safety rule: if urgency is “urgent,” show emergency instructions first (and don’t bury it under risk cards).
+
+Make “not a diagnosis” unavoidable with a pre-results confirmation (“I understand this is information only”).
+
+2) Major logic issue: you mix “chronic risk” and “acute symptom urgency,” causing contradictory results
+
+From your results screen: Overall Risk = Moderate but Recommended Action = Urgent (red banner).
+That’s not wrong medically (you can be “low chronic risk” but still have a dangerous symptom), but it’s confusing.
+
+Fix
+
+Separate into two outputs:
+
+Urgency right now (symptom-driven)
+
+Long-term risk (risk-factor-driven)
+
+In the UI, show urgency as the “main” result; show long-term risk as secondary.
+
+3) Pediatric logic is not safe/consistent (big limitation)
+
+You support babies/children in the schema and UI, but the algorithm + outputs are not pediatric-safe.
+
+Specific problems (code-level)
+
+A) Double-counting family history in pediatrics
+In the pediatric branch you do:
+
+if (data.familyHistoryDiabetes) diabetesScore += 2; (id "family")
+Then later in general adult logic you do again:
+
+if (data.familyHistoryDiabetes) diabetesScore += 3; (id "familyDiabetes")
+
+So a child can get +5 for the same factor + duplicated factor cards.
+
+B) Double-counting pediatric symptoms
+In pediatrics you add points for thirst/urination/weight change, then later you compute diabetesSymptomCount (which includes those same symptoms) and add more points again.
+
+C) BMI is calculated + displayed for infants/children
+Even though you skip BMI scoring for pediatrics, you still compute BMI and label it using adult cutoffs (underweight/normal/overweight/obese). That’s not valid for children.
+
+Improvements
+
+If ageGroup is infant/child, run a separate pediatric pathway:
+
+Hide BMI entirely (or use pediatric percentile logic if you’re willing to do it correctly).
+
+Use a pediatric-specific symptom safety screen (DKA warnings etc).
+
+Avoid adult risk-factor questions (cholesterol, smoking, etc) or clearly gate them by age.
+
+If your goal is Morocco + orientation: honestly consider dropping pediatrics in v1 and doing adults only, then adding pediatrics later with clinician review.
+
+4) Some factors are mislabeled or inconsistent
+Specific bugs
+
+Gestational diabetes factor uses the wrong translation keys
+
+id: "gestational",
+nameKey: "factor.familyDiabetes",
+explanationKey: "factor.familyDiabetes.explanation",
+
+
+That’s plainly incorrect (it will display as “Family history of diabetes” even though it’s gestational diabetes).
+
+“Additional symptoms” affect scores silently
+additionalSymptomCount >= 3 adds points but you don’t add a contributing factor, so users won’t know why their score increased.
+
+Facility type filter variable is unused
+
+const facilityType = urgency === "urgent" ? undefined : undefined;
+
+
+This does nothing (minor, but messy).
+
+Improvements
+
+Add/repair translation keys for gestational diabetes.
+
+Any scoring change should produce a visible “why” factor card.
+
+5) Custom symptom “urgent keyword detection” only works in English (and can misfire)
+
+You parse customSymptoms with regex for chest pain / shortness of breath / palpitations — but only in English.
+
+Impacts
+
+French/Arabic users typing “douleur thoracique”, “essoufflement”, “ضيق التنفس” won’t trigger urgent detection.
+
+Regex can false-trigger (“I had chest discomfort years ago”) without context.
+
+Improvements
+
+Either:
+
+Make custom-symptom parsing multilingual (fr/ar at minimum), or
+
+Remove urgent keyword parsing from free text and rely on explicit symptom checkboxes
+
+If you keep free text parsing: add context questions (“right now?”, “severe?”, “new?”).
+
+6) UI/UX glitches and friction points (from the video + code)
+A) Inputs allow weird formatting (leading zeros, integer-only)
+
+You parse with parseInt, so:
+
+70.5 becomes 70
+
+016 stays visually weird
+
+Weight/height often need decimals.
+
+Fix
+
+Use parseFloat for weight/height/waist and allow decimals.
+
+Normalize display (strip leading zeros on blur).
+
+B) Infant/child UI is inconsistent with validation
+
+In step 2 you validate minimum weight/height by age group, but the input min attributes are hardcoded (e.g. min={30} for weight, min={100} for height). That conflicts with “babies supported.”
+
+Fix
+
+Set the input min dynamically based on age group (same values you use in validation).
+
+C) Location step shows access-barrier questions even when “Prefer not to share”
+
+In the recording, “Prefer not to share” says “general guidance only,” but the form still asks rural/urban and distance/transport. That’s not wrong, but it’s conceptually confusing.
+
+Fix
+
+If “prefer not,” either:
+
+hide all location/access questions, or
+
+reword it: “No precise location; we can still tailor advice based on access barriers.”
+
+D) “High accuracy mode” toggle lacks explanation of battery/time + fallback
+
+It’s nice, but add:
+
+“May take longer / may fail indoors”
+
+“If it fails, switch to manual entry”
+
+E) Urgency presentation could cause panic without clarity
+
+The red urgent banner is strong. It should include:
+
+clear “call local emergency number / go to emergency”
+
+a short why (e.g., “Chest pain can be serious”)
+
+7) Privacy + security issues (serious)
+A) You log sensitive health data on the server
+
+In routes.ts:
+
+console.log("Received assessment data:", JSON.stringify(req.body, null, 2));
+
+
+That’s personal health data. Even if you “don’t store,” logs are storage.
+
+Also in server/index.ts, your API logger includes JSON response bodies.
+
+Fix
+
+Remove request-body logging entirely (or redact).
+
+Log only metadata: request id, timestamp, status code, duration.
+
+B) No rate limiting / abuse protection
+
+A public /api/assess endpoint can be spammed.
+
+Fix
+
+Add rate limiting (per IP) + basic bot protection.
+
+Add security headers (helmet), and consider CORS restrictions.
+
+C) “We don’t store your information” needs to be accurate
+
+If you keep logs, that statement becomes false.
+
+8) Local orientation (“où aller”) is currently weak / risky
+
+Your facility list is a small, hardcoded dataset with many placeholder-ish phone numbers and limited coverage. That can mislead users in rural areas.
+
+Improvements
+
+Use official sources where possible (Ministry / regional directories) or clearly label: “example facilities.”
+
+Expand facility fields:
+
+exact address, emergency capability, hours reliability
+
+WhatsApp/phone formatting, accessibility notes
+
+Add a “Call first” suggestion + “hours may change” warning.
+
+If you can’t guarantee accuracy, show categories (“nearest hospital with emergency”) more than named facilities.
+
+9) Clinical validity limitation: the scoring model is heuristic, not validated
+
+Your scoring is internally consistent, but it’s not a validated clinical tool. If your goal is “applicable” in real life, this is the main constraint.
+
+Improvements
+
+Tie your scoring to a known validated framework (or cite specific published screening questionnaires).
+
+Add a clinician review step (even one doctor) to sanity-check thresholds and urgent rules.
+
+Add “uncertainty” wording: “This estimate may be wrong.”

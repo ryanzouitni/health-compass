@@ -172,10 +172,8 @@ export default function AssessmentPage() {
 
   const mutation = useMutation({
     mutationFn: async (data: Assessment) => {
-      console.log("Submitting assessment:", JSON.stringify(data, null, 2));
       const response = await apiRequest("POST", "/api/assess", data);
       const result = await response.json();
-      console.log("Assessment result:", JSON.stringify(result, null, 2));
       return result as { success: boolean; result: RiskResult };
     },
     onSuccess: (data) => {

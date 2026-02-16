@@ -35,6 +35,46 @@ function getAgeInYears(ageValue: number, ageUnit: "years" | "months"): number {
 
 // Calculate risk scores based on assessment data
 function calculateRiskAssessment(data: Assessment): RiskResult {
+  // Get age info
+  const ageGroup = getAgeGroup(data.ageValue, data.ageUnit);
+  const ageInYears = getAgeInYears(data.ageValue, data.ageUnit);
+
+  // Pediatric unsupported - return safe message for v1
+  if (ageGroup === "infant" || ageGroup === "child") {
+    const urgencyFactors: RiskFactor[] = [];
+    // Still check for pediatric DKA red flags
+    const pediatricRedFlags = [data.fruityBreath, data.lethargy, data.vomiting].filter(Boolean).length;
+    const hasUrgentPediatricSymptoms = pediatricRedFlags >= 2;
+
+    if (hasUrgentPediatricSymptoms) {
+      urgencyFactors.push({
+        id: "pediatricUrgent",
+        nameKey: "factor.pediatricUrgent",
+        explanationKey: "factor.pediatricUrgent.explanation",
+        severity: "high",
+      });
+    }
+
+    return {
+      isPediatricUnsupported: true,
+      diabetesRisk: "low",
+      cardiovascularRisk: "low",
+      overallRisk: "low",
+      urgency: hasUrgentPediatricSymptoms ? "urgent" : "monitor",
+      urgencyFactors,
+      riskFactors: [],
+      contributingFactors: urgencyFactors,
+      lifestyleSuggestions: [],
+      warningSigns: [
+        { id: "chestPain", signKey: "warning.chestPain", actionKey: "warning.chestPain.action" },
+        { id: "breathing", signKey: "warning.breathing", actionKey: "warning.breathing.action" },
+      ],
+      bmi: 0,
+      bmiCategory: "normal",
+      locationProvided: false,
+    };
+  }
+
   let diabetesScore = 0;
   let cardiovascularScore = 0;
   const contributingFactors: RiskFactor[] = [];
@@ -42,146 +82,41 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   // Calculate BMI
   const bmi = calculateBMI(data.weight, data.height);
   const bmiCategory = getBMICategory(bmi);
-  
-  // Get age info
-  const ageGroup = getAgeGroup(data.ageValue, data.ageUnit);
-  const ageInYears = getAgeInYears(data.ageValue, data.ageUnit);
 
-  // Age-appropriate risk assessment
-  if (ageGroup === "infant" || ageGroup === "child") {
-    // Pediatric assessment - different risk factors
-    // Focus on Type 1 diabetes warning signs and growth concerns
-    
-    // Pediatric symptoms - use same fields as form
-    if (data.frequentThirst) {
-      diabetesScore += 3;
-      contributingFactors.push({
-        id: "thirst",
-        nameKey: "factor.thirst",
-        explanationKey: "factor.thirst.explanation",
-        severity: "high",
-      });
-    }
-    
-    if (data.frequentUrination) {
-      diabetesScore += 3;
-      contributingFactors.push({
-        id: "urination",
-        nameKey: "factor.urination",
-        explanationKey: "factor.urination.explanation",
-        severity: "high",
-      });
-    }
-    
-    if (data.unexplainedWeightChange) {
-      diabetesScore += 3;
-      contributingFactors.push({
-        id: "weightChange",
-        nameKey: "factor.weightChange",
-        explanationKey: "factor.weightChange.explanation",
-        severity: "high",
-      });
-    }
-    
-    if (data.frequentInfections) {
-      diabetesScore += 2;
-      contributingFactors.push({
-        id: "infections",
-        nameKey: "factor.infections",
-        explanationKey: "factor.infections.explanation",
-        severity: "medium",
-      });
-    }
-    
-    if (data.growthConcerns) {
-      diabetesScore += 1;
-      contributingFactors.push({
-        id: "growth",
-        nameKey: "factor.growth",
-        explanationKey: "factor.growth.explanation",
-        severity: "medium",
-      });
-    }
-    
-    // Infant-specific
-    if (ageGroup === "infant") {
-      if (data.irritability) {
-        diabetesScore += 2;
-        contributingFactors.push({
-          id: "irritability",
-          nameKey: "factor.irritability",
-          explanationKey: "factor.irritability.explanation",
-          severity: "medium",
-        });
-      }
-      
-      if (data.poorFeeding) {
-        diabetesScore += 2;
-        contributingFactors.push({
-          id: "poorFeeding",
-          nameKey: "factor.poorFeeding",
-          explanationKey: "factor.poorFeeding.explanation",
-          severity: "medium",
-        });
-      }
-      
-      if (data.wetDiapers === "increased") {
-        diabetesScore += 2;
-        contributingFactors.push({
-          id: "wetDiapers",
-          nameKey: "factor.wetDiapers",
-          explanationKey: "factor.wetDiapers.explanation",
-          severity: "medium",
-        });
-      }
-    }
-    
-    // Family history still relevant for pediatric
-    if (data.familyHistoryDiabetes) {
-      diabetesScore += 2;
-      contributingFactors.push({
-        id: "family",
-        nameKey: "factor.familyDiabetes",
-        explanationKey: "factor.familyDiabetes.explanation",
-        severity: "medium",
-      });
-    }
-    
-  } else {
-    // Adult/adolescent risk assessment (original logic)
-    // Age factor (risk increases after 45)
-    if (ageInYears >= 65) {
-      diabetesScore += 3;
-      cardiovascularScore += 4;
-      contributingFactors.push({
-        id: "age",
-        nameKey: "factor.age",
-        explanationKey: "factor.age.explanation",
-        severity: "high",
-      });
-    } else if (ageInYears >= 55) {
-      diabetesScore += 2;
-      cardiovascularScore += 3;
-      contributingFactors.push({
-        id: "age",
-        nameKey: "factor.age",
-        explanationKey: "factor.age.explanation",
-        severity: "medium",
-      });
-    } else if (ageInYears >= 45) {
-      diabetesScore += 1;
-      cardiovascularScore += 2;
-      contributingFactors.push({
-        id: "age",
-        nameKey: "factor.age",
-        explanationKey: "factor.age.explanation",
-        severity: "low",
-      });
-    }
-  } // End of adult/adolescent risk assessment
+  // Age factor (risk increases after 45)
+  if (ageInYears >= 65) {
+    diabetesScore += 3;
+    cardiovascularScore += 4;
+    contributingFactors.push({
+      id: "age",
+      nameKey: "factor.age",
+      explanationKey: "factor.age.explanation",
+      severity: "high",
+    });
+  } else if (ageInYears >= 55) {
+    diabetesScore += 2;
+    cardiovascularScore += 3;
+    contributingFactors.push({
+      id: "age",
+      nameKey: "factor.age",
+      explanationKey: "factor.age.explanation",
+      severity: "medium",
+    });
+  } else if (ageInYears >= 45) {
+    diabetesScore += 1;
+    cardiovascularScore += 2;
+    contributingFactors.push({
+      id: "age",
+      nameKey: "factor.age",
+      explanationKey: "factor.age.explanation",
+      severity: "low",
+    });
+  }
+
+  const isPediatric = false;
 
   // BMI factor - only for adolescents and adults (pediatric BMI requires different assessment)
-  if (ageGroup === "adolescent" || ageGroup === "adult") {
+  if (!isPediatric) {
     if (bmi >= 35) {
       diabetesScore += 4;
       cardiovascularScore += 3;
@@ -227,8 +162,8 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     }
   }
 
-  // Family history - diabetes
-  if (data.familyHistoryDiabetes) {
+  // Family history - diabetes (only for non-pediatric; pediatric already scored above)
+  if (!isPediatric && data.familyHistoryDiabetes) {
     diabetesScore += 3;
     contributingFactors.push({
       id: "familyDiabetes",
@@ -239,7 +174,7 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   }
 
   // Family history - heart disease
-  if (data.familyHistoryHeartDisease) {
+  if (!isPediatric && data.familyHistoryHeartDisease) {
     cardiovascularScore += 3;
     contributingFactors.push({
       id: "familyHeart",
@@ -276,9 +211,9 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   if (data.previousGestationalDiabetes) {
     diabetesScore += 3;
     contributingFactors.push({
-      id: "gestational",
-      nameKey: "factor.familyDiabetes",
-      explanationKey: "factor.familyDiabetes.explanation",
+      id: "gestationalDiabetes",
+      nameKey: "factor.gestationalDiabetes",
+      explanationKey: "factor.gestationalDiabetes.explanation",
       severity: "medium",
     });
   }
@@ -417,42 +352,36 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   // Custom symptoms contribute to risk if present
   const hasCustomSymptoms = data.customSymptoms && data.customSymptoms.trim().length > 0;
   
-  // Check if custom symptoms text contains urgent keywords that should trigger urgent pathway
-  const customSymptomsLower = (data.customSymptoms || "").toLowerCase();
-  const urgentKeywordsInCustom = {
-    chestPain: /chest\s*(pain|pressure|tightness|discomfort)|heart\s*(pain|attack)|cardiac|angina/i.test(customSymptomsLower),
-    shortnessOfBreath: /short(ness)?\s*(of)?\s*breath|breathing\s*(difficulty|problem|trouble)|can('t|not)\s*breathe|difficulty\s*breathing|breathless/i.test(customSymptomsLower),
-    irregularHeartbeat: /irregular\s*(heart\s*)?beat|heart\s*(palpitation|racing|flutter|skip)|arrhythmia|rapid\s*heart/i.test(customSymptomsLower),
-  };
-  const hasUrgentKeywordsInCustom = urgentKeywordsInCustom.chestPain || urgentKeywordsInCustom.shortnessOfBreath || urgentKeywordsInCustom.irregularHeartbeat;
   
-  // Combined symptom count for scoring
+  // Combined symptom count for scoring (skip for pediatric - already scored above)
   const symptomCount = diabetesSymptomCount;
 
-  if (symptomCount >= 3) {
-    diabetesScore += 4;
-    contributingFactors.push({
-      id: "symptoms",
-      nameKey: "factor.symptoms",
-      explanationKey: "factor.symptoms.explanation",
-      severity: "high",
-    });
-  } else if (symptomCount >= 2) {
-    diabetesScore += 2;
-    contributingFactors.push({
-      id: "symptoms",
-      nameKey: "factor.symptoms",
-      explanationKey: "factor.symptoms.explanation",
-      severity: "medium",
-    });
-  } else if (symptomCount >= 1) {
-    diabetesScore += 1;
-    contributingFactors.push({
-      id: "symptoms",
-      nameKey: "factor.symptoms",
-      explanationKey: "factor.symptoms.explanation",
-      severity: "low",
-    });
+  if (!isPediatric) {
+    if (symptomCount >= 3) {
+      diabetesScore += 4;
+      contributingFactors.push({
+        id: "symptoms",
+        nameKey: "factor.symptoms",
+        explanationKey: "factor.symptoms.explanation",
+        severity: "high",
+      });
+    } else if (symptomCount >= 2) {
+      diabetesScore += 2;
+      contributingFactors.push({
+        id: "symptoms",
+        nameKey: "factor.symptoms",
+        explanationKey: "factor.symptoms.explanation",
+        severity: "medium",
+      });
+    } else if (symptomCount >= 1) {
+      diabetesScore += 1;
+      contributingFactors.push({
+        id: "symptoms",
+        nameKey: "factor.symptoms",
+        explanationKey: "factor.symptoms.explanation",
+        severity: "low",
+      });
+    }
   }
 
   if (cardioSymptomCount >= 3) {
@@ -473,6 +402,12 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   if (additionalSymptomCount >= 3) {
     diabetesScore += 1;
     cardiovascularScore += 1;
+    contributingFactors.push({
+      id: "multipleAdditionalSymptoms",
+      nameKey: "factor.multipleAdditionalSymptoms",
+      explanationKey: "factor.multipleAdditionalSymptoms.explanation",
+      severity: "low",
+    });
   }
   
   // Custom symptoms add to risk if present (person is concerned enough to report them)
@@ -518,11 +453,8 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
   let hasUrgentCardioSymptoms = false;
   let hasPediatricUrgentSymptoms = false;
   
-  // Check for urgent conditions that require immediate attention
-  // This includes BOTH checkboxes AND urgent keywords detected in custom symptoms text
-  const hasUrgentCardioCheckbox = data.chestPain || data.shortnessOfBreath || data.irregularHeartbeat;
-  
-  if (hasUrgentCardioCheckbox || hasUrgentKeywordsInCustom) {
+  // Check for urgent conditions based on explicit checkbox selections only
+  if (data.chestPain || data.shortnessOfBreath || data.irregularHeartbeat) {
     urgency = "urgent";
     hasUrgentCardioSymptoms = true;
     // Add contributing factor for urgent cardiovascular symptoms
@@ -707,25 +639,26 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     // Find recommended facilities based on location
     let nearbyFacilities: (HealthcareFacility & { distance?: number })[] = [];
 
+    // Facility filtering based on urgency
+    const needsEmergency = urgency === "urgent";
+
     if (data.locationAccess.latitude && data.locationAccess.longitude) {
-      // Use GPS coordinates to find nearest facilities
-      const facilityType = urgency === "urgent" ? undefined : undefined;
-      const needsEmergency = urgency === "urgent";
-      
       nearbyFacilities = findNearestFacilities(
         data.locationAccess.latitude,
         data.locationAccess.longitude,
         { hasEmergency: needsEmergency || undefined, limit: 3 }
       );
     } else if (data.locationAccess.region || data.locationAccess.province || data.locationAccess.city) {
-      // Use manual location to find facilities in region
       const searchTerm = data.locationAccess.region || data.locationAccess.province || data.locationAccess.city || "";
-      const needsEmergency = urgency === "urgent";
-      
       nearbyFacilities = findFacilitiesByRegion(searchTerm, {
         hasEmergency: needsEmergency || undefined,
         limit: 3,
       });
+    }
+
+    // Filter by facility type based on urgency
+    if (urgency === "urgent") {
+      nearbyFacilities = nearbyFacilities.filter(f => f.type === "hospital" || f.type === "emergency");
     }
 
     if (nearbyFacilities.length > 0) {
@@ -749,11 +682,18 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     }
   }
 
+  // Split contributing factors into urgency (symptom-based) and risk (long-term)
+  const urgencyFactorIds = ["urgentCardio", "cardioSymptoms", "pediatricUrgent", "symptoms", "customSymptoms", "multipleAdditionalSymptoms"];
+  const urgencyFactors = contributingFactors.filter(f => urgencyFactorIds.includes(f.id));
+  const riskFactors = contributingFactors.filter(f => !urgencyFactorIds.includes(f.id));
+
   return {
     diabetesRisk,
     cardiovascularRisk,
     overallRisk,
     urgency,
+    urgencyFactors,
+    riskFactors,
     contributingFactors,
     lifestyleSuggestions,
     warningSigns,
@@ -772,13 +712,11 @@ export async function registerRoutes(
   // Health assessment endpoint
   app.post("/api/assess", (req, res) => {
     try {
-      console.log("Received assessment data:", JSON.stringify(req.body, null, 2));
-      
       // Validate input
       const validationResult = assessmentSchema.safeParse(req.body);
       
       if (!validationResult.success) {
-        console.error("Validation errors:", validationResult.error.errors);
+        console.error("Validation failed:", validationResult.error.errors.length, "errors");
         return res.status(400).json({
           success: false,
           error: "Invalid assessment data",

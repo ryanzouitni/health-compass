@@ -10,7 +10,6 @@ import {
   ArrowRight,
   RefreshCw,
   Printer,
-  ChevronDown,
   Scale,
   Moon,
   Dumbbell,
@@ -30,6 +29,8 @@ import {
   Building2,
   Hospital,
   AlertOctagon,
+  Info,
+  PhoneCall,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +41,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language-context";
 import type { RiskResult, RiskLevel, UrgencyLevel } from "@shared/schema";
@@ -95,22 +95,22 @@ const lifestyleIcons: Record<string, typeof Heart> = {
 function isValidRiskResult(data: unknown): data is RiskResult {
   if (!data || typeof data !== "object") return false;
   const obj = data as Record<string, unknown>;
-  
+
+  if (obj.isPediatricUnsupported) return true;
+
   const validRiskLevels = ["low", "moderate", "high"];
   const validUrgency = ["monitor", "see_doctor_soon", "urgent"];
   const validBmiCategories = ["underweight", "normal", "overweight", "obese"];
-  
+
   return (
     typeof obj.overallRisk === "string" && validRiskLevels.includes(obj.overallRisk) &&
     typeof obj.diabetesRisk === "string" && validRiskLevels.includes(obj.diabetesRisk) &&
     typeof obj.cardiovascularRisk === "string" && validRiskLevels.includes(obj.cardiovascularRisk) &&
     typeof obj.urgency === "string" && validUrgency.includes(obj.urgency) &&
-    typeof obj.bmi === "number" && !isNaN(obj.bmi) &&
-    typeof obj.bmiCategory === "string" && validBmiCategories.includes(obj.bmiCategory) &&
+    typeof obj.bmi === "number" &&
     Array.isArray(obj.contributingFactors) &&
     Array.isArray(obj.lifestyleSuggestions) &&
-    Array.isArray(obj.warningSigns) &&
-    typeof obj.locationProvided === "boolean"
+    Array.isArray(obj.warningSigns)
   );
 }
 
@@ -122,20 +122,22 @@ export default function ResultsPage() {
 
   const handleCopySummary = () => {
     if (!result) return;
-    
-    const summary = `Health Assessment Summary
----
-Risk Level: ${t(`risk.${result.overallRisk}`)}
-Urgency: ${t(`urgency.${result.urgency}`)}
-BMI: ${result.bmi.toFixed(1)} (${t(`bmi.${result.bmiCategory}`)})
 
-Key Risk Factors:
+    const summary = `${t("results.title")}
+---
+${t("urgency.title")}: ${t(`urgency.${result.urgency === "see_doctor_soon" ? "soon" : result.urgency}`)}
+${t("risk.longterm")}: ${t(`risk.${result.overallRisk}`)}
+${result.bmi > 0 ? `BMI: ${result.bmi.toFixed(1)} (${t(`bmi.${result.bmiCategory}`)})` : ""}
+
+${t("factors.title")}:
 ${result.contributingFactors.map(f => `- ${t(f.nameKey)}`).join('\n')}
 
-Recommendations:
+${t("lifestyle.title")}:
 ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\n')}
+
+${t("results.disclaimer")}
 `;
-    
+
     navigator.clipboard.writeText(summary).then(() => {
       toast({
         title: t("facility.copied"),
@@ -163,11 +165,9 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
         if (isValidRiskResult(parsed)) {
           setResult(parsed);
         } else {
-          console.error("Invalid assessment result format");
           setLocation("/");
         }
-      } catch (e) {
-        console.error("Failed to parse assessment result:", e);
+      } catch {
         setLocation("/");
       }
     } else {
@@ -183,7 +183,54 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
     );
   }
 
-  const RiskIcon = riskIcons[result.overallRisk];
+  // Pediatric unsupported state
+  if (result.isPediatricUnsupported) {
+    const hasUrgentPediatric = result.urgency === "urgent";
+    return (
+      <div className="container max-w-4xl px-4 py-8 md:py-12">
+        <h1 className="mb-6 text-2xl font-bold md:text-3xl">{t("results.title")}</h1>
+
+        <div className="mb-8 rounded-lg bg-muted/50 p-4 text-center text-sm text-muted-foreground">
+          <Shield className="mx-auto mb-2 h-5 w-5" />
+          {t("results.disclaimer")}
+        </div>
+
+        {hasUrgentPediatric && (
+          <Card className={`mb-6 border-2 ${urgencyColors.urgent}`} data-testid="card-pediatric-urgent">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <AlertTriangle className="h-8 w-8 shrink-0" />
+                <div>
+                  <h3 className="mb-2 text-lg font-semibold">{t("urgency.title")}: {t("urgency.urgent")}</h3>
+                  <p className="text-sm opacity-90">{t("urgency.urgent.desc")}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="mb-6 border-2" data-testid="card-pediatric-unsupported">
+          <CardContent className="p-6 text-center">
+            <Info className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h2 className="mb-3 text-xl font-semibold">{t("pediatric.unsupported.title")}</h2>
+            <p className="mb-4 text-muted-foreground">{t("pediatric.unsupported.desc")}</p>
+            <p className="text-sm text-muted-foreground">{t("pediatric.unsupported.emergency")}</p>
+          </CardContent>
+        </Card>
+
+        <div className="flex flex-col items-center gap-4 rounded-lg bg-muted/30 p-8 text-center">
+          <p className="text-muted-foreground">{t("results.disclaimer")}</p>
+          <Link href="/assessment">
+            <Button variant="outline" className="gap-2" data-testid="button-new-assessment">
+              <RefreshCw className="h-4 w-4" />
+              {t("action.restart")}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const UrgencyIcon = urgencyIcons[result.urgency];
 
   const handlePrint = () => {
@@ -219,27 +266,94 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
         {t("results.disclaimer")}
       </div>
 
-      {/* Overall Risk Card */}
-      <Card className={`mb-6 border-2 ${riskBgColors[result.overallRisk]}`}>
+      {/* ===== SECTION 1: URGENCY (PRIMARY - What to do now) ===== */}
+      <Card className={`mb-6 border-2 ${urgencyColors[result.urgency]}`} data-testid="card-urgency">
         <CardContent className="p-6">
           <div className="flex flex-col items-center gap-4 md:flex-row md:items-start md:gap-6">
-            <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-full ${riskColors[result.overallRisk]}`}>
-              <RiskIcon className="h-10 w-10" />
+            <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-full ${
+              result.urgency === "urgent" ? "bg-urgency-urgent/20" :
+              result.urgency === "see_doctor_soon" ? "bg-urgency-soon/20" : "bg-urgency-monitor/20"
+            }`}>
+              <UrgencyIcon className="h-10 w-10" />
             </div>
             <div className="flex-1 text-center md:text-start">
-              <p className="mb-1 text-sm font-medium text-muted-foreground">{t("risk.overall")}</p>
-              <h2 className={`mb-2 text-3xl font-bold ${riskTextColors[result.overallRisk]}`}>
-                {t(`risk.${result.overallRisk}`)}
+              <p className="mb-1 text-sm font-medium text-muted-foreground">{t("urgency.title")}</p>
+              <h2 className="mb-2 text-3xl font-bold">
+                {t(`urgency.${result.urgency === "see_doctor_soon" ? "soon" : result.urgency}`)}
               </h2>
-              <p className="text-muted-foreground">{t(`risk.${result.overallRisk}.desc`)}</p>
+              <p className="opacity-90">
+                {t(`urgency.${result.urgency === "see_doctor_soon" ? "soon" : result.urgency}.desc`)}
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Urgency Factors (symptom-based) */}
+      {result.urgencyFactors && result.urgencyFactors.length > 0 && (
+        <Card className="mb-8 border-2" data-testid="card-urgency-factors">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-muted-foreground" />
+              {t("factors.urgency.title")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="multiple" className="w-full">
+              {result.urgencyFactors.map((factor) => (
+                <AccordionItem key={factor.id} value={factor.id}>
+                  <AccordionTrigger className="text-start hover:no-underline" data-testid={`accordion-urgency-factor-${factor.id}`}>
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant="outline"
+                        className={
+                          factor.severity === "high"
+                            ? "border-risk-high text-risk-high"
+                            : factor.severity === "medium"
+                            ? "border-risk-moderate text-risk-moderate"
+                            : "border-muted-foreground"
+                        }
+                      >
+                        {factor.severity === "high" ? "!" : factor.severity === "medium" ? "•" : "○"}
+                      </Badge>
+                      <span className="font-medium">{t(factor.nameKey)}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="rounded-lg bg-muted/50 p-4">
+                      <p className="mb-2 text-sm font-medium text-muted-foreground">{t("factors.why")}</p>
+                      <p className="text-sm">{t(factor.explanationKey)}</p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Call-ahead advisory */}
+      <Card className="mb-8 border-2 border-amber-500/30 bg-amber-500/5" data-testid="card-call-ahead">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <PhoneCall className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+            <div>
+              <p className="font-medium text-sm">{t("facility.callAhead")}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t("facility.emergencyNote")}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ===== SECTION 2: LONG-TERM RISK (SECONDARY - Prevention) ===== */}
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-muted-foreground">{t("risk.longterm")}</h2>
+        <p className="text-sm text-muted-foreground">{t("risk.longterm.desc")}</p>
+      </div>
+
       {/* Risk Breakdown */}
       <div className="mb-6 grid gap-4 md:grid-cols-2">
-        <Card className={`border-2 ${riskBgColors[result.diabetesRisk]}`}>
+        <Card className={`border-2 ${riskBgColors[result.diabetesRisk]}`} data-testid="card-diabetes-risk">
           <CardContent className="flex items-center gap-4 p-4">
             <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${riskColors[result.diabetesRisk]}`}>
               <Activity className="h-6 w-6" />
@@ -253,7 +367,7 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
           </CardContent>
         </Card>
 
-        <Card className={`border-2 ${riskBgColors[result.cardiovascularRisk]}`}>
+        <Card className={`border-2 ${riskBgColors[result.cardiovascularRisk]}`} data-testid="card-cardio-risk">
           <CardContent className="flex items-center gap-4 p-4">
             <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${riskColors[result.cardiovascularRisk]}`}>
               <Heart className="h-6 w-6" />
@@ -269,54 +383,39 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
       </div>
 
       {/* BMI Info */}
-      <Card className="mb-6 border-2">
-        <CardContent className="flex items-center justify-between gap-4 p-4">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <Scale className="h-6 w-6 text-primary" />
+      {result.bmi > 0 && (
+        <Card className="mb-6 border-2" data-testid="card-bmi">
+          <CardContent className="flex items-center justify-between gap-4 p-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <Scale className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t("bmi.value")}</p>
+                <p className="text-xl font-bold">{result.bmi.toFixed(1)}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{t("bmi.value")}</p>
-              <p className="text-xl font-bold">{result.bmi.toFixed(1)}</p>
-            </div>
-          </div>
-          <Badge variant="secondary" className="text-sm">
-            {t(`bmi.${result.bmiCategory}`)}
-          </Badge>
-        </CardContent>
-      </Card>
+            <Badge variant="secondary" className="text-sm">
+              {t(`bmi.${result.bmiCategory}`)}
+            </Badge>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Urgency Banner */}
-      <Card className={`mb-8 border-2 ${urgencyColors[result.urgency]}`}>
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <UrgencyIcon className="h-8 w-8 shrink-0" />
-            <div>
-              <h3 className="mb-2 text-lg font-semibold">
-                {t("urgency.title")}: {t(`urgency.${result.urgency === "see_doctor_soon" ? "soon" : result.urgency}`)}
-              </h3>
-              <p className="text-sm opacity-90">
-                {t(`urgency.${result.urgency === "see_doctor_soon" ? "soon" : result.urgency}.desc`)}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Contributing Factors */}
-      {result.contributingFactors.length > 0 && (
-        <Card className="mb-8 border-2">
+      {/* Long-term Risk Factors */}
+      {result.riskFactors && result.riskFactors.length > 0 && (
+        <Card className="mb-8 border-2" data-testid="card-risk-factors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-muted-foreground" />
-              {t("factors.title")}
+              {t("factors.risk.title")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Accordion type="multiple" className="w-full">
-              {result.contributingFactors.map((factor, index) => (
+              {result.riskFactors.map((factor) => (
                 <AccordionItem key={factor.id} value={factor.id}>
-                  <AccordionTrigger className="text-start hover:no-underline" data-testid={`accordion-factor-${factor.id}`}>
+                  <AccordionTrigger className="text-start hover:no-underline" data-testid={`accordion-risk-factor-${factor.id}`}>
                     <div className="flex items-center gap-3">
                       <Badge
                         variant="outline"
@@ -347,7 +446,7 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
       )}
 
       {/* Lifestyle Suggestions */}
-      <Card className="mb-8 border-2">
+      <Card className="mb-8 border-2" data-testid="card-lifestyle">
         <CardHeader>
           <CardTitle>{t("lifestyle.title")}</CardTitle>
           <CardDescription>{t("lifestyle.subtitle")}</CardDescription>
@@ -375,7 +474,7 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
       </Card>
 
       {/* Warning Signs */}
-      <Card className="mb-8 border-2 border-risk-high/20 bg-risk-high/5">
+      <Card className="mb-8 border-2 border-risk-high/20 bg-risk-high/5" data-testid="card-warnings">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-risk-high">
             <AlertTriangle className="h-5 w-5" />
@@ -399,7 +498,7 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
       </Card>
 
       {/* When to See a Doctor */}
-      <Card className="mb-8 border-2">
+      <Card className="mb-8 border-2" data-testid="card-doctor-timeline">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-muted-foreground" />
@@ -408,10 +507,9 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
         </CardHeader>
         <CardContent>
           <div className="relative space-y-4">
-            {/* Timeline line */}
             <div className="absolute bottom-4 top-4 left-6 w-0.5 bg-border rtl:left-auto rtl:right-6" />
-            
-            {(["routine", "soon", "urgent", "emergency"] as const).map((level, index) => (
+
+            {(["routine", "soon", "urgent", "emergency"] as const).map((level) => (
               <div key={level} className="relative flex gap-4">
                 <div
                   className={`z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 ${
@@ -425,7 +523,7 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
                   }`}
                 >
                   {level === "emergency" ? (
-                    <Phone className={`h-5 w-5 ${level === "emergency" ? "text-risk-high" : "text-muted-foreground"}`} />
+                    <Phone className="h-5 w-5 text-risk-high" />
                   ) : level === "urgent" ? (
                     <AlertTriangle className="h-5 w-5 text-risk-moderate" />
                   ) : level === "soon" ? (
@@ -444,9 +542,9 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
         </CardContent>
       </Card>
 
-      {/* Care Pathway - only shown if location was provided */}
+      {/* Care Pathway */}
       {result.carePathway && (
-        <Card className="mb-8 border-2">
+        <Card className="mb-8 border-2" data-testid="card-care-pathway">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -459,7 +557,6 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Where to go */}
             <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
               <MapPin className="h-5 w-5 shrink-0 text-primary mt-0.5" />
               <div>
@@ -467,8 +564,7 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
                 <p className="font-semibold">{t(result.carePathway.whereToGoKey)}</p>
               </div>
             </div>
-            
-            {/* When to go */}
+
             <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
               <Clock className="h-5 w-5 shrink-0 text-primary mt-0.5" />
               <div>
@@ -476,8 +572,7 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
                 <p className="font-semibold">{t(result.carePathway.whenToGoKey)}</p>
               </div>
             </div>
-            
-            {/* Additional guidance for rural/high-barrier users */}
+
             {result.carePathway.additionalGuidanceKey && (
               <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
                 <AlertCircle className="h-5 w-5 shrink-0 text-amber-500 mt-0.5" />
@@ -491,9 +586,9 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
         </Card>
       )}
 
-      {/* Recommended Facilities - only shown if facilities available */}
+      {/* Recommended Facilities */}
       {result.recommendedFacilities && result.recommendedFacilities.length > 0 && (
-        <Card className="mb-8 border-2">
+        <Card className="mb-8 border-2" data-testid="card-facilities">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -518,11 +613,11 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-start gap-3">
                         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                          facility.type === "emergency" ? "bg-risk-high/10" : 
+                          facility.type === "emergency" ? "bg-risk-high/10" :
                           facility.type === "hospital" ? "bg-primary/10" : "bg-muted"
                         }`}>
                           <FacilityIcon className={`h-5 w-5 ${
-                            facility.type === "emergency" ? "text-risk-high" : 
+                            facility.type === "emergency" ? "text-risk-high" :
                             facility.type === "hospital" ? "text-primary" : "text-muted-foreground"
                           }`} />
                         </div>
@@ -535,8 +630,7 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
                         </div>
                       </div>
                     </div>
-                    
-                    {/* One-tap actions */}
+
                     <div className="flex flex-wrap gap-2">
                       <a href={facility.mapsUrl} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" size="sm" className="gap-2" data-testid={`button-directions-${index}`}>
@@ -570,114 +664,41 @@ ${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\
       )}
 
       {/* Trusted Resources */}
-      <Card className="mb-8 border-2">
+      <Card className="mb-8 border-2" data-testid="card-resources">
         <CardHeader>
           <CardTitle>{t("resources.title")}</CardTitle>
           <CardDescription>{t("resources.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
-            <a
-              href="https://www.who.int/health-topics/diabetes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border p-4 hover-elevate"
-              data-testid="link-who"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
-                <span className="text-sm font-bold text-blue-500">WHO</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">{t("trust.who")}</p>
-                <p className="text-xs text-muted-foreground">who.int</p>
-              </div>
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-            </a>
-
-            <a
-              href="https://www.sante.gov.ma"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border p-4 hover-elevate"
-              data-testid="link-morocco"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                <span className="text-sm font-bold text-red-500">MS</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">{t("trust.morocco")}</p>
-                <p className="text-xs text-muted-foreground">sante.gov.ma</p>
-              </div>
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-            </a>
-
-            <a
-              href="https://www.cdc.gov/diabetes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border p-4 hover-elevate"
-              data-testid="link-cdc"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-500/10">
-                <span className="text-sm font-bold text-indigo-500">CDC</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">{t("trust.cdc")}</p>
-                <p className="text-xs text-muted-foreground">cdc.gov</p>
-              </div>
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-            </a>
-
-            <a
-              href="https://www.dabadoc.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border p-4 hover-elevate"
-              data-testid="link-dabadoc"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-500/10">
-                <span className="text-sm font-bold text-cyan-500">DD</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">{t("trust.dabadoc")}</p>
-                <p className="text-xs text-muted-foreground">dabadoc.com</p>
-              </div>
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-            </a>
-
-            <a
-              href="https://www.med.ma"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border p-4 hover-elevate"
-              data-testid="link-medma"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
-                <span className="text-sm font-bold text-orange-500">med</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">{t("trust.medma")}</p>
-                <p className="text-xs text-muted-foreground">med.ma</p>
-              </div>
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-            </a>
-
-            <a
-              href="https://diabetes.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border p-4 hover-elevate"
-              data-testid="link-ada"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-500/10">
-                <span className="text-sm font-bold text-teal-500">ADA</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">{t("trust.ada")}</p>
-                <p className="text-xs text-muted-foreground">diabetes.org</p>
-              </div>
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-            </a>
+            {[
+              { id: "who", href: "https://www.who.int/health-topics/diabetes", domain: "who.int", color: "text-blue-500", bg: "bg-blue-500/10" },
+              { id: "morocco", href: "https://www.sante.gov.ma", domain: "sante.gov.ma", color: "text-red-500", bg: "bg-red-500/10", label: "MS" },
+              { id: "cdc", href: "https://www.cdc.gov/diabetes", domain: "cdc.gov", color: "text-indigo-500", bg: "bg-indigo-500/10" },
+              { id: "dabadoc", href: "https://www.dabadoc.com", domain: "dabadoc.com", color: "text-cyan-500", bg: "bg-cyan-500/10", label: "DD" },
+              { id: "medma", href: "https://www.med.ma", domain: "med.ma", color: "text-orange-500", bg: "bg-orange-500/10", label: "med" },
+              { id: "ada", href: "https://diabetes.org", domain: "diabetes.org", color: "text-teal-500", bg: "bg-teal-500/10" },
+            ].map((resource) => (
+              <a
+                key={resource.id}
+                href={resource.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-lg border p-4 hover-elevate"
+                data-testid={`link-${resource.id}`}
+              >
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${resource.bg}`}>
+                  <span className={`text-sm font-bold ${resource.color}`}>
+                    {resource.label || resource.id.toUpperCase().slice(0, 3)}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium">{t(`trust.${resource.id}`)}</p>
+                  <p className="text-xs text-muted-foreground">{resource.domain}</p>
+                </div>
+                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+              </a>
+            ))}
           </div>
         </CardContent>
       </Card>

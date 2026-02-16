@@ -36,6 +36,11 @@ Preferred communication style: Simple, everyday language.
 - In-memory storage interface allows future database integration without code changes
 - Risk calculation algorithm based on WHO and CDC guidelines for diabetes/cardiovascular risk
 - Comprehensive symptom tracking with 30+ predefined symptoms plus free-text custom symptom input
+- **Pediatric cases (infant/child)**: Return `isPediatricUnsupported` early with safe message; only DKA red flag detection (fruity breath, lethargy, vomiting)
+- **Results split**: Urgency factors (symptom-based, primary) vs Risk factors (long-term prevention, secondary)
+- **No PHI logging**: All server/client logging sanitized to avoid exposing health data
+- **Facility filtering**: Urgent cases show only hospitals/emergency; moderate/low show all types
+- **Free-text keyword detection removed**: Unsafe for multilingual use; relies on explicit symptom checkboxes only
 
 ### Symptom Tracking System
 The platform includes an expanded symptom tracking system organized by category:

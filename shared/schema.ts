@@ -153,10 +153,13 @@ export interface FacilityRecommendation {
 
 // Complete risk assessment result
 export interface RiskResult {
+  isPediatricUnsupported?: boolean;
   diabetesRisk: RiskLevel;
   cardiovascularRisk: RiskLevel;
   overallRisk: RiskLevel;
   urgency: UrgencyLevel;
+  urgencyFactors: RiskFactor[];
+  riskFactors: RiskFactor[];
   contributingFactors: RiskFactor[];
   lifestyleSuggestions: LifestyleSuggestion[];
   warningSigns: WarningSign[];

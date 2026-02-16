@@ -189,7 +189,11 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Contributing Factors
     "factors.title": "Factors Affecting Your Risk",
+    "factors.urgency.title": "Symptom-Based Concerns",
+    "factors.risk.title": "Long-Term Risk Factors",
     "factors.why": "Why This Matters",
+    "risk.longterm": "Long-Term Risk Overview",
+    "risk.longterm.desc": "These factors relate to your ongoing health — not an immediate concern, but worth monitoring over time.",
     
     // Factor Names
     "factor.age": "Age",
@@ -238,6 +242,17 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.weightChange.explanation": "Unexplained weight loss or gain can indicate metabolic issues including diabetes.",
     "factor.frequentInfections.explanation": "Recurring infections may indicate weakened immunity related to blood sugar issues.",
     "factor.growthConcerns.explanation": "In children, growth issues can sometimes be associated with metabolic conditions.",
+    "factor.multipleAdditionalSymptoms": "Multiple Additional Symptoms",
+    "factor.multipleAdditionalSymptoms.explanation": "Reporting 3 or more additional symptoms suggests you may benefit from a comprehensive medical evaluation.",
+    
+    // Facility & Care
+    "facility.callAhead": "If possible, call ahead before visiting a facility so they can prepare for your arrival.",
+    "facility.emergencyNote": "In a true emergency (e.g. chest pain, difficulty breathing), go directly to the nearest hospital or call emergency services.",
+    
+    // Pediatric Unsupported
+    "pediatric.unsupported.title": "Pediatric Assessment Not Yet Available",
+    "pediatric.unsupported.desc": "Our risk assessment tool is currently designed for adults and adolescents. Pediatric risk evaluation requires specialized clinical tools that we do not yet support.",
+    "pediatric.unsupported.emergency": "If your child shows urgent symptoms such as fruity-smelling breath, persistent vomiting, or extreme lethargy, seek immediate medical attention.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "Lifestyle Suggestions",
@@ -619,7 +634,11 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Contributing Factors
     "factors.title": "Facteurs Affectant Votre Risque",
+    "factors.urgency.title": "Préoccupations Liées aux Symptômes",
+    "factors.risk.title": "Facteurs de Risque à Long Terme",
     "factors.why": "Pourquoi C'est Important",
+    "risk.longterm": "Aperçu du Risque à Long Terme",
+    "risk.longterm.desc": "Ces facteurs concernent votre santé continue — pas une préoccupation immédiate, mais à surveiller dans le temps.",
     
     // Factor Names
     "factor.age": "Âge",
@@ -668,6 +687,17 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.weightChange.explanation": "Une perte ou un gain de poids inexpliqué peut indiquer des problèmes métaboliques.",
     "factor.frequentInfections.explanation": "Les infections récurrentes peuvent indiquer une immunité affaiblie liée au sucre sanguin.",
     "factor.growthConcerns.explanation": "Chez les enfants, les problèmes de croissance peuvent être associés à des conditions métaboliques.",
+    "factor.multipleAdditionalSymptoms": "Symptômes Supplémentaires Multiples",
+    "factor.multipleAdditionalSymptoms.explanation": "Signaler 3 symptômes supplémentaires ou plus suggère qu'une évaluation médicale complète pourrait être bénéfique.",
+    
+    // Facility & Care
+    "facility.callAhead": "Si possible, appelez avant de vous rendre dans un établissement pour qu'ils puissent préparer votre arrivée.",
+    "facility.emergencyNote": "En cas d'urgence réelle (ex: douleur thoracique, difficulté respiratoire), rendez-vous directement à l'hôpital le plus proche ou appelez les services d'urgence.",
+    
+    // Pediatric Unsupported
+    "pediatric.unsupported.title": "Évaluation Pédiatrique Pas Encore Disponible",
+    "pediatric.unsupported.desc": "Notre outil d'évaluation des risques est actuellement conçu pour les adultes et les adolescents. L'évaluation pédiatrique nécessite des outils cliniques spécialisés que nous ne supportons pas encore.",
+    "pediatric.unsupported.emergency": "Si votre enfant présente des symptômes urgents tels qu'une haleine fruitée, des vomissements persistants ou une léthargie extrême, consultez immédiatement un médecin.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "Suggestions de Mode de Vie",
@@ -1049,7 +1079,11 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Contributing Factors
     "factors.title": "العوامل المؤثرة على مخاطرك",
+    "factors.urgency.title": "مخاوف متعلقة بالأعراض",
+    "factors.risk.title": "عوامل الخطر طويلة المدى",
     "factors.why": "لماذا هذا مهم",
+    "risk.longterm": "نظرة عامة على المخاطر طويلة المدى",
+    "risk.longterm.desc": "تتعلق هذه العوامل بصحتك المستمرة — ليست مصدر قلق فوري، لكنها تستحق المراقبة بمرور الوقت.",
     
     // Factor Names
     "factor.age": "العمر",
@@ -1098,6 +1132,17 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.weightChange.explanation": "تغير الوزن غير المبرر قد يشير إلى مشاكل في التمثيل الغذائي.",
     "factor.frequentInfections.explanation": "الالتهابات المتكررة قد تشير إلى ضعف المناعة المرتبط بمشاكل السكر.",
     "factor.growthConcerns.explanation": "عند الأطفال، قد ترتبط مشاكل النمو بحالات التمثيل الغذائي.",
+    "factor.multipleAdditionalSymptoms": "أعراض إضافية متعددة",
+    "factor.multipleAdditionalSymptoms.explanation": "الإبلاغ عن 3 أعراض إضافية أو أكثر يشير إلى أنك قد تستفيد من تقييم طبي شامل.",
+    
+    // Facility & Care
+    "facility.callAhead": "إن أمكن، اتصل مسبقاً قبل زيارة المنشأة حتى يتمكنوا من التحضير لوصولك.",
+    "facility.emergencyNote": "في حالة الطوارئ الحقيقية (مثل ألم الصدر، صعوبة التنفس)، اذهب مباشرة إلى أقرب مستشفى أو اتصل بخدمات الطوارئ.",
+    
+    // Pediatric Unsupported
+    "pediatric.unsupported.title": "التقييم للأطفال غير متاح بعد",
+    "pediatric.unsupported.desc": "أداة تقييم المخاطر الخاصة بنا مصممة حالياً للبالغين والمراهقين. يتطلب تقييم مخاطر الأطفال أدوات سريرية متخصصة لا ندعمها بعد.",
+    "pediatric.unsupported.emergency": "إذا ظهرت على طفلك أعراض عاجلة مثل رائحة نفس فاكهية أو قيء مستمر أو خمول شديد، اطلب الرعاية الطبية فوراً.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "اقتراحات نمط الحياة",
@@ -1479,7 +1524,11 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Contributing Factors
     "factors.title": "ⵉⵎⵙⴽⴰⵔⵏ ⵉⵙⵡⵡⵓⵔⵉⵏ ⵖⴼ ⵜⵎⴰⴳⵉⵜ ⵏⵏⴽ",
+    "factors.urgency.title": "ⵜⵉⵖⴰⵡⵙⵉⵡⵉⵏ ⵉⵣⴷⵉⵏ ⴷ ⵉⵏⵥⵉⵜⵏ",
+    "factors.risk.title": "ⵉⵎⵙⴽⴰⵔⵏ ⵏ ⵜⵎⴰⴳⵉⵜ ⴳ ⵓⵣⵎⵣ ⵉⵖⵣⵣⵉⴼⵏ",
     "factors.why": "ⵎⴰⵖⴼ ⴰⴷ ⵉⵀⵎⵎⴰ",
+    "risk.longterm": "ⵜⴰⵙⵓⵎⵔⵜ ⵏ ⵜⵎⴰⴳⵉⵜ ⴳ ⵓⵣⵎⵣ ⵉⵖⵣⵣⵉⴼⵏ",
+    "risk.longterm.desc": "ⵉⵎⵙⴽⴰⵔⵏ ⴰⴷ ⵣⴷⵉⵏ ⴷ ⵜⴷⵓⵙⵉ ⵏⵏⴽ ⵜⴰⵎⴰⵜⴰⵢⵜ — ⵓⵔ ⴷ ⴰⵖⴱⴰⵍⵓ ⵏ ⵜⵖⴰⵡⵍⴰ, ⵎⴰⵛⴰ ⵉⵅⵚⵚⴰ ⴰⴷ ⵜⵜⵡⴰⵙⵡⵓⵜⵜⵓⵏ.",
     
     // Factor Names
     "factor.age": "ⵜⴰⵎⵣⵉ",
@@ -1528,6 +1577,17 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.weightChange.explanation": "ⴰⵙⵏⴼⵍ ⵏ ⵓⵜⵉⴳ ⵓⵔ ⵉⵜⵜⵡⴰⵙⵙⴰⵏ ⵉⵣⵎⵔ ⴰⴷ ⵉⵎⵎⵍ ⵉⵎⵓⴽⵔⵉⵙⵏ.",
     "factor.frequentInfections.explanation": "ⵜⵉⵎⴰⴹⵓⵏⵉⵏ ⵢⵜⵜⵓⵖⴰⵍⵏⵉⵏ ⵣⵎⵔⵏⵜ ⴰⴷ ⵎⵎⵍⵏⵜ ⵜⵉⵍⵉⵍⵍⵉ ⵏ ⵜⵡⵉⵣⵉ.",
     "factor.growthConcerns.explanation": "ⴳ ⵉⵅⴼⴰⵡⵏ, ⵉⵎⵓⴽⵔⵉⵙⵏ ⵏ ⵓⵎⵖⵓⵔ ⵣⵎⵔⵏ ⴰⴷ ⵜⵜⵡⴰⵎⵓⵔⵙⵏ ⴷ ⵜⵎⴰⴹⵓⵏⵉⵏ.",
+    "factor.multipleAdditionalSymptoms": "ⵉⵏⵥⵉⵜⵏ ⵢⴰⴹⵏⵉⵏ ⴰⵜⵜⵓⵢⵏ",
+    "factor.multipleAdditionalSymptoms.explanation": "ⴰⵙⵏⵎⵎⴰⵍ ⵏ 3 ⵏ ⵉⵏⵥⵉⵜⵏ ⵢⴰⴹⵏⵉⵏ ⵏⵖ ⵓⴳⴳⴰⵔ ⵉⵙⵙⴽⵜⵉⴷ ⴰⵙⵜⵉ ⴰⵎⴷⴷⴰⵏ ⴰⵎⵔⵙⴰⵍ.",
+    
+    // Facility & Care
+    "facility.callAhead": "ⵎⴰ ⵜⵣⵎⵔⴷ, ⵙⵉⵡⵍ ⴷⴰⵜ ⵏ ⵜⵉⵣⵉⵜ ⴰⴷ ⵙⵀⵢⵢⵓⵏ ⵉ ⵓⵙⵉⴽⵉ ⵏⵏⴽ.",
+    "facility.emergencyNote": "ⴳ ⵜⵣⵣⵉⴳⵣⵜ ⵜⴰⵎⴷⴷⵉⵜ, ⴷⴷⵓ ⵙ ⵜⵏⴰⴼⵓⵜ ⵜⴰⵎⵇⵇⵔⴰⵏⵜ ⵜⴰⵎⵉⵔⴰⵏⵜ.",
+    
+    // Pediatric Unsupported
+    "pediatric.unsupported.title": "ⴰⵙⴼⵔⴰⵙ ⵏ ⵉⵅⴼⴰⵡⵏ ⵓⵔ ⵉⵍⵍⵉ ⵙⵓⵍ",
+    "pediatric.unsupported.desc": "ⴰⵎⵙⵙⵓⴷⵓ ⵏⵏⵖ ⵉⵜⵜⵡⴰⵙⴽⴰⵔ ⵉ ⵉⵎⵖⵔⴰⵏ ⴷ ⵉⵎⵥⵢⴰⵏⵏ. ⴰⵙⴼⵔⴰⵙ ⵏ ⵉⵅⴼⴰⵡⵏ ⵉⵅⵚⵚⴰ ⵉⵎⴰⵙⵙⵏ ⵉⵏⵎⵍⴰⵏ.",
+    "pediatric.unsupported.emergency": "ⵎⴰ ⵉⵙⵎⴰⵏ ⵓⵅⴼⴰⵡ ⵏⵏⴽ ⵉⵏⵥⵉⵜⵏ ⵉⵎⵙⵜⵉⵏ, ⵔⵣⵎ ⴰⵎⵙⵏⴼⴰⵔ ⴷⵖⵉⴽⴰ.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "ⵉⵙⵜⵓⵛⵉⵏ ⵏ ⵜⵓⴷⵔⵜ",

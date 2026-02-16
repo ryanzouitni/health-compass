@@ -1,0 +1,257 @@
+Goal
+
+Improve Health Compass by fixing logic bugs, privacy issues, UX validation issues, and making outputs safer/clearer (orientation, not diagnosis). Implement changes in this repo (TypeScript/Express + React).
+
+A) Critical privacy/security fixes (DO FIRST)
+A1) Remove all logging of health data (PHI)
+
+Problem: server/routes.ts logs full request body; server/index.ts may log JSON response bodies. This violates “we don’t store data” because logs count as storage.
+
+Tasks
+
+In server/routes.ts, delete or redact:
+
+console.log("Received assessment data:", JSON.stringify(req.body, null, 2));
+
+
+Replace with minimal metadata logging only, e.g.:
+
+console.info("Assessment request received", { hasBody: !!req.body });
+
+
+In server/index.ts, find any request/response logger that prints bodies, and remove body logging. Keep only:
+
+method, path, status, duration
+
+B) Fix the biggest scoring bugs (logic correctness)
+B1) Pediatric double-counting: family history
+
+Problem: In pediatrics logic, familyHistoryDiabetes gets +2, and later adult logic adds +3 again (same factor counted twice; also duplicated factor cards).
+
+Task
+
+In server/routes.ts:
+
+When ageGroup is "infant" or "child", do not run adult-family-history scoring.
+
+Implement a guard variable:
+
+const isPediatric = data.ageGroup === "infant" || data.ageGroup === "child";
+
+
+Then wrap adult family history scoring in:
+
+if (!isPediatric && data.familyHistoryDiabetes) { ... }
+
+
+Also ensure you do not push the same factor twice (avoid two different ids for the same thing).
+
+B2) Pediatric symptom double-counting (thirst/urination/weight loss)
+
+Problem: pediatric branch adds points for those symptoms, and later diabetesSymptomCount adds more points again.
+
+Task
+
+If isPediatric:
+
+Either:
+
+skip the diabetesSymptomCount step entirely, OR
+
+ensure symptoms are scored only once by building a single symptom scoring function for pediatrics.
+
+Implement simplest safe fix:
+
+if (!isPediatric) {
+  // existing diabetesSymptomCount scoring
+}
+
+B3) Fix gestational diabetes translation keys
+
+Problem: gestational factor uses wrong nameKey/explanationKey (currently points to familyDiabetes keys).
+
+Task
+
+In server/routes.ts, replace:
+
+id: "gestational",
+nameKey: "factor.familyDiabetes",
+explanationKey: "factor.familyDiabetes.explanation",
+
+
+With new keys:
+
+id: "gestationalDiabetes",
+nameKey: "factor.gestationalDiabetes",
+explanationKey: "factor.gestationalDiabetes.explanation",
+
+
+Add these keys to the translation file(s) used by the frontend (where other factor.* keys live).
+
+B4) Ensure every score change has a visible “why” factor
+
+Problem: additionalSymptomCount >= 3 adds points without adding a factor card.
+
+Task
+
+Whenever you add points, also push a factor entry.
+Example:
+
+if (additionalSymptomCount >= 3) {
+  urgencyScore += 2;
+  contributingFactors.push({
+    id: "multipleAdditionalSymptoms",
+    nameKey: "factor.multipleAdditionalSymptoms",
+    explanationKey: "factor.multipleAdditionalSymptoms.explanation",
+    score: 2,
+    condition: "3+ additional symptoms selected",
+  });
+}
+
+
+Add translation keys.
+
+C) Split results into 2 outputs (reduces confusion + safer)
+C1) Output must show:
+
+Urgency right now (symptoms) → primary
+
+Long-term risk (prevention) → secondary
+
+Task (backend)
+
+In response JSON from /api/assess, include two separate objects:
+
+return res.json({
+  urgency: { level: "low|moderate|urgent", score: urgencyScore, reasons: urgencyFactors },
+  longTermRisk: { level: "low|moderate|high", score: diabetesScore, reasons: riskFactors },
+  facilityRecommendations: [...],
+});
+
+
+Separate the contributing factors into two arrays: urgencyFactors and riskFactors.
+
+Task (frontend)
+
+Update results UI to display:
+
+Big banner for urgency result (with “what to do now”)
+
+Smaller section for long-term risk (with prevention guidance)
+
+D) Pediatrics: either disable or properly gate (pick one)
+Option D1 (recommended for v1): Disable pediatrics
+
+If ageGroup is "infant" or "child":
+
+don’t calculate BMI
+
+don’t show adult BMI categories
+
+show a message:
+“This tool currently supports adults only. For children, consult a healthcare professional or emergency services if severe symptoms.”
+
+Implement:
+
+On frontend: prevent submission if pediatric OR allow submission but return “unsupported” result.
+
+On backend: return a safe response with urgency only and no long-term risk.
+
+Option D2 (harder): Separate pediatric pathway
+
+If keeping pediatrics:
+
+create a separate pediatric scoring function
+
+remove BMI display for pediatrics
+
+separate urgent red-flag checks (dehydration, breathing difficulty, etc.)
+
+E) UX + input handling fixes
+E1) Allow decimals for height/weight/waist
+
+Problem: frontend uses parseInt so 70.5 becomes 70.
+
+Task
+
+In the React form components, replace parseInt(...) with parseFloat(...) for:
+
+weightKg, heightCm, waistCm
+
+Also update zod schema (if needed) to allow decimals.
+
+E2) Dynamic input min values based on age group
+
+Problem: inputs are hardcoded min={30}, min={100} which breaks infants.
+
+Task
+
+Compute min values:
+
+const minWeight = ageGroup === "infant" ? 2 : ageGroup === "child" ? 10 : 30;
+const minHeight = ageGroup === "infant" ? 45 : ageGroup === "child" ? 80 : 100;
+
+
+Apply to <input min={minWeight}> etc.
+
+E3) Location flow clarity
+
+If user selects “Prefer not to share precise location”:
+
+either hide access-barrier fields OR reword them as “access constraints (no exact location needed)”.
+
+F) Local orientation (“où aller”) reliability upgrades
+F1) Facility filtering
+
+Currently:
+
+const facilityType = urgency === "urgent" ? undefined : undefined;
+
+
+This is unused.
+
+Task
+
+Implement facility type rules:
+
+urgency=urgent → hospitals/ER only
+
+urgency=moderate → clinics + hospitals
+
+urgency=low → clinics/pharmacies/telehealth resources
+
+Use facilityType meaningfully or remove it.
+
+F2) Add “Call first / hours may vary”
+
+On results page, always show:
+
+“Call ahead to confirm opening hours and availability.”
+
+“If symptoms are severe, go to emergency immediately.”
+
+G) Free-text symptom detection: multilingual or remove
+G1) Simplest safe fix
+
+Remove urgent detection from customSymptoms free text, and only rely on explicit checkbox symptoms.
+
+OR
+
+G2) Make multilingual
+
+Add French + Arabic keywords for chest pain / shortness of breath / fainting etc.
+But include a confirmation question: “Is this happening right now?”
+
+H) Final polish: language + safer phrasing
+H1) Replace diagnosis-like labels
+
+Change UI strings:
+
+“Risk Level” → “Long-term risk indicators”
+
+“Recommended Action: Urgent” → “Urgency: Seek care now”
+
+Always keep “Not a diagnosis” near results.
+
+Add a pre-results confirmation modal/checkbox:
+“I understand this tool provides orientation and is not medical advice.”
