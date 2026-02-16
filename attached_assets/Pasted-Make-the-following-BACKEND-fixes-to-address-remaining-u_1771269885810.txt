@@ -1,0 +1,187 @@
+Make the following BACKEND fixes to address remaining unresolved issues in server/routes.ts (and any related shared files). Do NOT change unrelated logic/UI.
+
+0) General rules
+
+Do NOT log request bodies (health data) anywhere.
+
+Every scoring change must add a visible factor (so frontend can show “why”).
+
+Separate factors into 2 buckets: urgencyFactors (acute/symptom-driven) and riskFactors (long-term/chronic risk).
+
+Response JSON should return these separately.
+
+1) Remove ALL PHI logging (critical)
+
+In server/routes.ts delete any logging of full req.body, e.g.:
+
+console.log("Received assessment data:", JSON.stringify(req.body, null, 2));
+
+Replace with minimal safe logging:
+
+console.info("Assessment request", { route: "/api/assess" });
+
+Also check server/index.ts (or any middleware logger) and ensure it does NOT print request or response bodies. Keep only method/path/status/duration.
+
+2) Implement clean 2-result structure: urgency + longTermRisk
+
+Currently the endpoint returns mixed factors and a single combined framing.
+
+Change the /api/assess response shape to:
+
+return res.json({
+  urgency: {
+    level: "low" | "moderate" | "urgent",
+    score: urgencyScore,
+    factors: urgencyFactors,
+    recommendedActionKey: "action.emergency" | "action.urgent" | "action.soon" | "action.routine",
+  },
+  longTermRisk: {
+    level: "low" | "moderate" | "high",
+    score: diabetesScore,
+    factors: riskFactors,
+  },
+  facilityRecommendations: recommendedFacilities,
+  meta: {
+    isPediatricUnsupported,
+    disclaimerKey: "disclaimer.notDiagnosis",
+  }
+});
+
+Notes:
+
+urgencyFactors and riskFactors are arrays of your factor objects (same format you currently use).
+
+Keep your existing urgency/risk scoring thresholds; just separate presentation.
+
+3) Fix pediatric double counting + make pediatrics a consistent policy (pick ONE and enforce)
+
+The repo previously had pediatric issues. The safest v1 approach is:
+
+Option A (recommended): Pediatrics = “unsupported”
+
+If ageGroup is "infant" or "child", do not calculate diabetes long-term risk score at all.
+Return:
+
+urgency only (based on acute red flags if you already have them)
+
+isPediatricUnsupported: true
+
+longTermRisk can still exist but set level: "unknown" and score 0, with a single factor explaining pediatric not supported.
+
+Implement like:
+
+const isPediatric = data.ageGroup === "infant" || data.ageGroup === "child";
+if (isPediatric) {
+  return res.json({
+    urgency: {...basicUrgencyFromRedFlags...},
+    longTermRisk: {
+      level: "unknown",
+      score: 0,
+      factors: [{
+        id: "pediatricUnsupported",
+        nameKey: "factor.pediatricUnsupported",
+        explanationKey: "factor.pediatricUnsupported.explanation",
+        score: 0,
+        condition: "Age group is infant/child",
+      }]
+    },
+    facilityRecommendations: recommendedFacilities,
+    meta: { isPediatricUnsupported: true, disclaimerKey: "disclaimer.notDiagnosis" }
+  });
+}
+
+This fully eliminates pediatric double counting and invalid BMI implications.
+
+(Do NOT keep partial pediatric scoring if you cannot validate it clinically.)
+
+4) Ensure “additional symptoms 3+” always creates a factor in urgencyFactors
+
+If you currently add points like:
+
+if (additionalSymptomCount >= 3) urgencyScore += 2;
+
+Then also push an urgency factor:
+
+if (additionalSymptomCount >= 3) {
+  urgencyScore += 2;
+  urgencyFactors.push({
+    id: "multipleAdditionalSymptoms",
+    nameKey: "factor.multipleAdditionalSymptoms",
+    explanationKey: "factor.multipleAdditionalSymptoms.explanation",
+    score: 2,
+    condition: "3+ additional symptoms selected",
+  });
+}
+
+Add translation keys if missing.
+
+5) Fix any remaining incorrect translation keys (verify gestational diabetes)
+
+Search server/routes.ts for:
+
+"factor.familyDiabetes" being used for gestational or other unrelated factor.
+Ensure gestational uses:
+
+id: "gestationalDiabetes",
+nameKey: "factor.gestationalDiabetes",
+explanationKey: "factor.gestationalDiabetes.explanation",
+6) Make facility selection actually depend on urgency (remove dead variables)
+
+If you have dead code like:
+
+const facilityType = urgency === "urgent" ? undefined : undefined;
+
+Remove it or implement real filtering rules:
+
+urgency urgent: show only facilities with emergency capability
+
+urgency moderate: clinics + hospitals
+
+urgency low: clinics + pharmacies/resources
+
+Implement by filtering facilities before distance sorting.
+
+Also always include a safety note in response (key-based) like:
+
+facilityNoteKey: "facility.callFirstHoursMayVary"
+
+7) Free-text symptom detection policy (backend)
+
+Currently you may parse customSymptoms with English-only regex. This is unreliable.
+
+Implement the safe v1 policy:
+
+Do NOT use customSymptoms text to set urgency to urgent.
+
+Only use checkbox fields / structured inputs for urgent red flags.
+
+So remove any code where customSymptoms triggers urgent.
+Instead, include customSymptoms only as a displayed note (or ignore it entirely).
+
+8) Add rate limiting + security headers (small but important)
+
+Add helmet for security headers.
+
+Add rate limiting on /api/assess (e.g., express-rate-limit).
+
+Example:
+
+60 requests / 15 minutes per IP.
+
+Do not block normal users; this is only to prevent spam.
+
+Acceptance tests (must pass)
+
+No server logs contain req.body or symptom/risk inputs.
+
+Response includes urgency and longTermRisk objects (separate).
+
+Every score addition has a corresponding factor in the correct bucket.
+
+Pediatrics returns isPediatricUnsupported: true and does NOT compute long-term diabetes risk.
+
+Facilities returned differ for urgent vs non-urgent (urgent returns only emergency-capable).
+
+Free-text customSymptoms does not trigger urgent automatically.
+
+Implement these backend changes now and keep behavior stable otherwise.
