@@ -1,0 +1,214 @@
+You are editing the repo “Health-Compass”. Make the following changes EXACTLY in client/src/pages/assessment.tsx to fix controlled numeric inputs forcing 0 (leading zero problem), add decimal support, and make min values dynamic.
+
+1) Update FormData type (around lines 33–96)
+
+Currently FormData has:
+
+ageValue: number;
+
+weight: number;
+
+height: number;
+
+waistCircumference: number;
+
+Change those four to OPTIONAL numbers so empty input can be represented as undefined instead of 0:
+
+ageValue?: number;
+weight?: number;
+height?: number;
+waistCircumference?: number;
+
+Do NOT change the other fields.
+
+2) Update initialFormData (around lines 98–161)
+
+Currently initial values force defaults like:
+
+ageValue: 35
+
+weight: 70
+
+height: 170
+
+waistCircumference: 0
+
+Change them to undefined so the inputs can start empty and never “snap back” to 0:
+
+ageValue: undefined,
+weight: undefined,
+height: undefined,
+waistCircumference: undefined,
+
+Leave the rest of initialFormData unchanged.
+
+3) Fix ageGroup calculation so it doesn’t crash when ageValue is undefined (around line ~193)
+
+Currently:
+
+const ageGroup = getAgeGroup(formData.ageValue, formData.ageUnit);
+
+Change to:
+
+const ageGroup = getAgeGroup(formData.ageValue ?? 0, formData.ageUnit);
+
+Also, inside handleSubmit, there’s:
+
+const currentAgeGroup = getAgeGroup(formData.ageValue, formData.ageUnit);
+
+Change to:
+
+const currentAgeGroup = getAgeGroup(formData.ageValue ?? 0, formData.ageUnit);
+4) Update Step 1 validation so empty age is treated as missing (in validateStep, around lines 198–209)
+
+Add a missing check before range checks:
+
+If formData.ageValue is undefined or Number.isNaN(formData.ageValue), set newErrors.ageValue.
+
+Example:
+
+if (formData.ageValue === undefined || Number.isNaN(formData.ageValue)) {
+  newErrors.ageValue = t("validation.required");
+} else {
+  // existing months/years range checks…
+}
+
+If you don’t have validation.required, create it in the translation file later; for now, use a simple fallback string "Required".
+
+5) Fix the actual “0 in front” bug by removing parseInt(...) || 0 and using controlled empty strings
+A) Age input (exact line ~423)
+
+Current line:
+
+onChange={(e) => updateField("ageValue", parseInt(e.target.value) || 0)}
+
+Change the value and onChange for age input:
+
+Change:
+
+value={formData.ageValue}
+
+to:
+
+value={formData.ageValue ?? ""}
+
+Change onChange to:
+
+onChange={(e) => {
+  const v = e.target.value;
+  updateField("ageValue", v === "" ? undefined : parseInt(v, 10));
+}}
+
+This prevents React from forcing 0 when the user clears the field.
+
+B) Weight input (exact line ~471)
+
+Current:
+
+min={30}
+value={formData.weight}
+onChange={(e) => updateField("weight", parseInt(e.target.value) || 0)}
+
+Replace with:
+
+Make min dynamic using the existing values in validation (you already compute minWeight/minHeight there, but your input min is hardcoded). Compute these right before rendering Step 2 or inline:
+
+Use these exact rules (match validateStep’s intent):
+
+infant: minWeight 0.5, minHeight 20
+
+child: minWeight 5, minHeight 50
+
+adolescent/adult: minWeight 30, minHeight 100
+
+So weight input should be:
+
+min={ageGroup === "infant" ? 0.5 : ageGroup === "child" ? 5 : 30}
+step="0.1"
+value={formData.weight ?? ""}
+onChange={(e) => {
+  const v = e.target.value;
+  updateField("weight", v === "" ? undefined : parseFloat(v));
+}}
+
+This:
+
+fixes leading 0 issue,
+
+supports decimals,
+
+fixes incorrect min for pediatrics.
+
+C) Height input (exact line ~486)
+
+Current:
+
+min={100}
+value={formData.height}
+onChange={(e) => updateField("height", parseInt(e.target.value) || 0)}
+
+Change to:
+
+min={ageGroup === "infant" ? 20 : ageGroup === "child" ? 50 : 100}
+step="0.1"
+value={formData.height ?? ""}
+onChange={(e) => {
+  const v = e.target.value;
+  updateField("height", v === "" ? undefined : parseFloat(v));
+}}
+D) Waist input (exact line ~501)
+
+Current:
+
+value={formData.waistCircumference || ""}
+onChange={(e) => updateField("waistCircumference", parseInt(e.target.value) || 0)}
+
+Change to:
+
+step="0.1"
+value={formData.waistCircumference ?? ""}
+onChange={(e) => {
+  const v = e.target.value;
+  updateField("waistCircumference", v === "" ? undefined : parseFloat(v));
+}}
+6) Update Step 2 validation to work with undefined + decimals (around lines ~211–221)
+
+Currently it does:
+
+if (!formData.weight || formData.weight < minWeight || ...)
+
+This wrongly treats 0 as missing (fine), but we now use undefined for missing; keep the logic but ensure it checks explicitly:
+
+Replace with:
+
+if (formData.weight === undefined || Number.isNaN(formData.weight) || formData.weight < minWeight || formData.weight > 300) {
+  newErrors.weight = t("validation.weightRange");
+}
+if (formData.height === undefined || Number.isNaN(formData.height) || formData.height < minHeight || formData.height > 250) {
+  newErrors.height = t("validation.heightRange");
+}
+7) Ensure submission uses required numbers safely (handleSubmit around lines ~264–270)
+
+Currently it sends:
+
+weight: formData.weight,
+height: formData.height,
+
+Since Assessment likely requires numbers, enforce that validation must pass before submit. If TypeScript complains, cast after validation or use non-null assertions:
+
+weight: formData.weight!,
+height: formData.height!,
+
+Only do this if handleSubmit is only reachable after validateStep passes.
+
+Expected result
+
+User can clear inputs without 0 reappearing.
+
+No more “0 in front” / forced leading 0.
+
+Weight/height/waist accept decimals.
+
+Min values for weight/height are consistent with age group instead of hardcoded.
+
+Implement all edits above in one commit, and do not change unrelated UI.

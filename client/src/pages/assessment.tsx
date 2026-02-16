@@ -32,11 +32,11 @@ function getAgeGroup(ageValue: number, ageUnit: "years" | "months"): AgeGroup {
 
 interface FormData {
   ageUnit: "years" | "months";
-  ageValue: number;
+  ageValue?: number;
   gender: "male" | "female" | "other";
-  weight: number;
-  height: number;
-  waistCircumference: number;
+  weight?: number;
+  height?: number;
+  waistCircumference?: number;
   familyHistoryDiabetes: boolean;
   familyHistoryHeartDisease: boolean;
   personalHistoryHighBloodPressure: boolean;
@@ -97,11 +97,11 @@ interface FormData {
 
 const initialFormData: FormData = {
   ageUnit: "years",
-  ageValue: 35,
+  ageValue: undefined,
   gender: "male",
-  weight: 70,
-  height: 170,
-  waistCircumference: 0,
+  weight: undefined,
+  height: undefined,
+  waistCircumference: undefined,
   familyHistoryDiabetes: false,
   familyHistoryHeartDisease: false,
   personalHistoryHighBloodPressure: false,
@@ -190,14 +190,15 @@ export default function AssessmentPage() {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const ageGroup = getAgeGroup(formData.ageValue, formData.ageUnit);
+  const ageGroup = getAgeGroup(formData.ageValue ?? 0, formData.ageUnit);
   
   const validateStep = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
-      // Validate age based on unit
-      if (formData.ageUnit === "months") {
+      if (formData.ageValue === undefined || Number.isNaN(formData.ageValue)) {
+        newErrors.ageValue = t("validation.required");
+      } else if (formData.ageUnit === "months") {
         if (formData.ageValue < 0 || formData.ageValue > 23) {
           newErrors.ageValue = t("validation.ageMonthsRange");
         }
@@ -209,14 +210,13 @@ export default function AssessmentPage() {
     }
 
     if (step === 2) {
-      // Adjust weight/height validation based on age
       const minWeight = ageGroup === "infant" ? 0.5 : ageGroup === "child" ? 5 : 30;
       const minHeight = ageGroup === "infant" ? 20 : ageGroup === "child" ? 50 : 100;
       
-      if (!formData.weight || formData.weight < minWeight || formData.weight > 300) {
+      if (formData.weight === undefined || Number.isNaN(formData.weight) || formData.weight < minWeight || formData.weight > 300) {
         newErrors.weight = t("validation.weightRange");
       }
-      if (!formData.height || formData.height < minHeight || formData.height > 250) {
+      if (formData.height === undefined || Number.isNaN(formData.height) || formData.height < minHeight || formData.height > 250) {
         newErrors.height = t("validation.heightRange");
       }
     }
@@ -259,15 +259,15 @@ export default function AssessmentPage() {
       };
     }
 
-    const currentAgeGroup = getAgeGroup(formData.ageValue, formData.ageUnit);
+    const currentAgeGroup = getAgeGroup(formData.ageValue ?? 0, formData.ageUnit);
     
     const assessmentData: Assessment = {
       ageUnit: formData.ageUnit,
-      ageValue: formData.ageValue,
+      ageValue: formData.ageValue!,
       gender: formData.gender,
-      weight: formData.weight,
-      height: formData.height,
-      waistCircumference: formData.waistCircumference > 0 ? formData.waistCircumference : undefined,
+      weight: formData.weight!,
+      height: formData.height!,
+      waistCircumference: formData.waistCircumference && formData.waistCircumference > 0 ? formData.waistCircumference : undefined,
       familyHistoryDiabetes: formData.familyHistoryDiabetes,
       familyHistoryHeartDisease: formData.familyHistoryHeartDisease,
       personalHistoryHighBloodPressure: formData.personalHistoryHighBloodPressure,
@@ -399,7 +399,7 @@ export default function AssessmentPage() {
                 {/* Age Value Input */}
                 {formData.ageUnit === "months" ? (
                   <Select
-                    value={formData.ageValue.toString()}
+                    value={(formData.ageValue ?? "").toString()}
                     onValueChange={(value) => updateField("ageValue", parseInt(value))}
                   >
                     <SelectTrigger data-testid="select-age-months">
@@ -419,8 +419,11 @@ export default function AssessmentPage() {
                     type="number"
                     min={0}
                     max={120}
-                    value={formData.ageValue}
-                    onChange={(e) => updateField("ageValue", parseInt(e.target.value) || 0)}
+                    value={formData.ageValue ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      updateField("ageValue", v === "" ? undefined : parseInt(v, 10));
+                    }}
                     placeholder={t("field.age.placeholder")}
                     data-testid="input-age"
                   />
@@ -465,10 +468,14 @@ export default function AssessmentPage() {
                 <Input
                   id="weight"
                   type="number"
-                  min={30}
+                  min={ageGroup === "infant" ? 0.5 : ageGroup === "child" ? 5 : 30}
                   max={300}
-                  value={formData.weight}
-                  onChange={(e) => updateField("weight", parseInt(e.target.value) || 0)}
+                  step="0.1"
+                  value={formData.weight ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateField("weight", v === "" ? undefined : parseFloat(v));
+                  }}
                   placeholder={t("field.weight.placeholder")}
                   data-testid="input-weight"
                 />
@@ -480,10 +487,14 @@ export default function AssessmentPage() {
                 <Input
                   id="height"
                   type="number"
-                  min={100}
+                  min={ageGroup === "infant" ? 20 : ageGroup === "child" ? 50 : 100}
                   max={250}
-                  value={formData.height}
-                  onChange={(e) => updateField("height", parseInt(e.target.value) || 0)}
+                  step="0.1"
+                  value={formData.height ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateField("height", v === "" ? undefined : parseFloat(v));
+                  }}
                   placeholder={t("field.height.placeholder")}
                   data-testid="input-height"
                 />
@@ -497,8 +508,12 @@ export default function AssessmentPage() {
                   type="number"
                   min={0}
                   max={200}
-                  value={formData.waistCircumference || ""}
-                  onChange={(e) => updateField("waistCircumference", parseInt(e.target.value) || 0)}
+                  step="0.1"
+                  value={formData.waistCircumference ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateField("waistCircumference", v === "" ? undefined : parseFloat(v));
+                  }}
                   placeholder={t("field.waist.placeholder")}
                   data-testid="input-waist"
                 />
