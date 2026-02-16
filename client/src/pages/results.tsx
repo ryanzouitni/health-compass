@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language-context";
-import type { RiskResult, RiskLevel, UrgencyLevel } from "@shared/schema";
+import type { AssessmentApiResponse, RiskLevel, UrgencyLevel } from "@shared/schema";
 
 const riskColors: Record<RiskLevel, string> = {
   low: "bg-risk-low text-white",
@@ -92,23 +92,28 @@ const lifestyleIcons: Record<string, typeof Heart> = {
   water: Droplets,
 };
 
-function isValidRiskResult(data: unknown): data is RiskResult {
+function isValidApiResponse(data: unknown): data is AssessmentApiResponse {
   if (!data || typeof data !== "object") return false;
   const obj = data as Record<string, unknown>;
 
-  if (obj.isPediatricUnsupported) return true;
+  if (!obj.urgency || typeof obj.urgency !== "object") return false;
+  if (!obj.longTermRisk || typeof obj.longTermRisk !== "object") return false;
+  if (!obj.meta || typeof obj.meta !== "object") return false;
 
+  const meta = obj.meta as Record<string, unknown>;
+  if (meta.isPediatricUnsupported) return true;
+
+  const urgency = obj.urgency as Record<string, unknown>;
+  const longTermRisk = obj.longTermRisk as Record<string, unknown>;
   const validRiskLevels = ["low", "moderate", "high"];
   const validUrgency = ["monitor", "see_doctor_soon", "urgent"];
-  const validBmiCategories = ["underweight", "normal", "overweight", "obese"];
 
   return (
-    typeof obj.overallRisk === "string" && validRiskLevels.includes(obj.overallRisk) &&
-    typeof obj.diabetesRisk === "string" && validRiskLevels.includes(obj.diabetesRisk) &&
-    typeof obj.cardiovascularRisk === "string" && validRiskLevels.includes(obj.cardiovascularRisk) &&
-    typeof obj.urgency === "string" && validUrgency.includes(obj.urgency) &&
-    typeof obj.bmi === "number" &&
-    Array.isArray(obj.contributingFactors) &&
+    typeof urgency.level === "string" && validUrgency.includes(urgency.level) &&
+    Array.isArray(urgency.factors) &&
+    typeof longTermRisk.level === "string" && validRiskLevels.includes(longTermRisk.level) &&
+    typeof longTermRisk.bmi === "number" &&
+    Array.isArray(longTermRisk.factors) &&
     Array.isArray(obj.lifestyleSuggestions) &&
     Array.isArray(obj.warningSigns)
   );
@@ -117,23 +122,25 @@ function isValidRiskResult(data: unknown): data is RiskResult {
 export default function ResultsPage() {
   const { t, isRTL } = useLanguage();
   const [, setLocation] = useLocation();
-  const [result, setResult] = useState<RiskResult | null>(null);
+  const [data, setData] = useState<AssessmentApiResponse | null>(null);
   const { toast } = useToast();
 
   const handleCopySummary = () => {
-    if (!result) return;
+    if (!data) return;
+
+    const allFactors = [...data.urgency.factors, ...data.longTermRisk.factors];
 
     const summary = `${t("results.title")}
 ---
-${t("urgency.title")}: ${t(`urgency.${result.urgency === "see_doctor_soon" ? "soon" : result.urgency}`)}
-${t("risk.longterm")}: ${t(`risk.${result.overallRisk}`)}
-${result.bmi > 0 ? `BMI: ${result.bmi.toFixed(1)} (${t(`bmi.${result.bmiCategory}`)})` : ""}
+${t("urgency.title")}: ${t(`urgency.${data.urgency.level === "see_doctor_soon" ? "soon" : data.urgency.level}`)}
+${t("risk.longterm")}: ${t(`risk.${data.longTermRisk.level}`)}
+${data.longTermRisk.bmi > 0 ? `BMI: ${data.longTermRisk.bmi.toFixed(1)} (${t(`bmi.${data.longTermRisk.bmiCategory}`)})` : ""}
 
 ${t("factors.title")}:
-${result.contributingFactors.map(f => `- ${t(f.nameKey)}`).join('\n')}
+${allFactors.map(f => `- ${t(f.nameKey)}`).join('\n')}
 
 ${t("lifestyle.title")}:
-${result.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\n')}
+${data.lifestyleSuggestions.slice(0, 3).map(s => `- ${t(s.titleKey)}`).join('\n')}
 
 ${t("results.disclaimer")}
 `;
@@ -162,8 +169,8 @@ ${t("results.disclaimer")}
     if (stored && stored.trim() !== "") {
       try {
         const parsed = JSON.parse(stored);
-        if (isValidRiskResult(parsed)) {
-          setResult(parsed);
+        if (isValidApiResponse(parsed)) {
+          setData(parsed);
         } else {
           setLocation("/");
         }
@@ -175,7 +182,7 @@ ${t("results.disclaimer")}
     }
   }, [setLocation]);
 
-  if (!result) {
+  if (!data) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -183,9 +190,8 @@ ${t("results.disclaimer")}
     );
   }
 
-  // Pediatric unsupported state
-  if (result.isPediatricUnsupported) {
-    const hasUrgentPediatric = result.urgency === "urgent";
+  if (data.meta.isPediatricUnsupported) {
+    const hasUrgentPediatric = data.urgency.level === "urgent";
     return (
       <div className="container max-w-4xl px-4 py-8 md:py-12">
         <h1 className="mb-6 text-2xl font-bold md:text-3xl">{t("results.title")}</h1>
@@ -231,7 +237,7 @@ ${t("results.disclaimer")}
     );
   }
 
-  const UrgencyIcon = urgencyIcons[result.urgency];
+  const UrgencyIcon = urgencyIcons[data.urgency.level];
 
   const handlePrint = () => {
     window.print();
@@ -239,7 +245,6 @@ ${t("results.disclaimer")}
 
   return (
     <div className="container max-w-4xl px-4 py-8 md:py-12">
-      {/* Header Actions */}
       <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-2xl font-bold md:text-3xl">{t("results.title")}</h1>
         <div className="flex items-center gap-2">
@@ -260,37 +265,34 @@ ${t("results.disclaimer")}
         </div>
       </div>
 
-      {/* Disclaimer */}
       <div className="mb-8 rounded-lg bg-muted/50 p-4 text-center text-sm text-muted-foreground">
         <Shield className="mx-auto mb-2 h-5 w-5" />
         {t("results.disclaimer")}
       </div>
 
-      {/* ===== SECTION 1: URGENCY (PRIMARY - What to do now) ===== */}
-      <Card className={`mb-6 border-2 ${urgencyColors[result.urgency]}`} data-testid="card-urgency">
+      <Card className={`mb-6 border-2 ${urgencyColors[data.urgency.level]}`} data-testid="card-urgency">
         <CardContent className="p-6">
           <div className="flex flex-col items-center gap-4 md:flex-row md:items-start md:gap-6">
             <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-full ${
-              result.urgency === "urgent" ? "bg-urgency-urgent/20" :
-              result.urgency === "see_doctor_soon" ? "bg-urgency-soon/20" : "bg-urgency-monitor/20"
+              data.urgency.level === "urgent" ? "bg-urgency-urgent/20" :
+              data.urgency.level === "see_doctor_soon" ? "bg-urgency-soon/20" : "bg-urgency-monitor/20"
             }`}>
               <UrgencyIcon className="h-10 w-10" />
             </div>
             <div className="flex-1 text-center md:text-start">
               <p className="mb-1 text-sm font-medium text-muted-foreground">{t("urgency.title")}</p>
               <h2 className="mb-2 text-3xl font-bold">
-                {t(`urgency.${result.urgency === "see_doctor_soon" ? "soon" : result.urgency}`)}
+                {t(`urgency.${data.urgency.level === "see_doctor_soon" ? "soon" : data.urgency.level}`)}
               </h2>
               <p className="opacity-90">
-                {t(`urgency.${result.urgency === "see_doctor_soon" ? "soon" : result.urgency}.desc`)}
+                {t(`urgency.${data.urgency.level === "see_doctor_soon" ? "soon" : data.urgency.level}.desc`)}
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Urgency Factors (symptom-based) */}
-      {result.urgencyFactors && result.urgencyFactors.length > 0 && (
+      {data.urgency.factors && data.urgency.factors.length > 0 && (
         <Card className="mb-8 border-2" data-testid="card-urgency-factors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -300,7 +302,7 @@ ${t("results.disclaimer")}
           </CardHeader>
           <CardContent>
             <Accordion type="multiple" className="w-full">
-              {result.urgencyFactors.map((factor) => (
+              {data.urgency.factors.map((factor) => (
                 <AccordionItem key={factor.id} value={factor.id}>
                   <AccordionTrigger className="text-start hover:no-underline" data-testid={`accordion-urgency-factor-${factor.id}`}>
                     <div className="flex items-center gap-3">
@@ -332,7 +334,6 @@ ${t("results.disclaimer")}
         </Card>
       )}
 
-      {/* Call-ahead advisory */}
       <Card className="mb-8 border-2 border-amber-500/30 bg-amber-500/5" data-testid="card-call-ahead">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
@@ -345,45 +346,42 @@ ${t("results.disclaimer")}
         </CardContent>
       </Card>
 
-      {/* ===== SECTION 2: LONG-TERM RISK (SECONDARY - Prevention) ===== */}
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-muted-foreground">{t("risk.longterm")}</h2>
         <p className="text-sm text-muted-foreground">{t("risk.longterm.desc")}</p>
       </div>
 
-      {/* Risk Breakdown */}
       <div className="mb-6 grid gap-4 md:grid-cols-2">
-        <Card className={`border-2 ${riskBgColors[result.diabetesRisk]}`} data-testid="card-diabetes-risk">
+        <Card className={`border-2 ${riskBgColors[data.longTermRisk.diabetesRisk]}`} data-testid="card-diabetes-risk">
           <CardContent className="flex items-center gap-4 p-4">
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${riskColors[result.diabetesRisk]}`}>
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${riskColors[data.longTermRisk.diabetesRisk]}`}>
               <Activity className="h-6 w-6" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">{t("risk.diabetes")}</p>
-              <p className={`text-xl font-bold ${riskTextColors[result.diabetesRisk]}`}>
-                {t(`risk.${result.diabetesRisk}`)}
+              <p className={`text-xl font-bold ${riskTextColors[data.longTermRisk.diabetesRisk]}`}>
+                {t(`risk.${data.longTermRisk.diabetesRisk}`)}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`border-2 ${riskBgColors[result.cardiovascularRisk]}`} data-testid="card-cardio-risk">
+        <Card className={`border-2 ${riskBgColors[data.longTermRisk.cardiovascularRisk]}`} data-testid="card-cardio-risk">
           <CardContent className="flex items-center gap-4 p-4">
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${riskColors[result.cardiovascularRisk]}`}>
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${riskColors[data.longTermRisk.cardiovascularRisk]}`}>
               <Heart className="h-6 w-6" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">{t("risk.cardiovascular")}</p>
-              <p className={`text-xl font-bold ${riskTextColors[result.cardiovascularRisk]}`}>
-                {t(`risk.${result.cardiovascularRisk}`)}
+              <p className={`text-xl font-bold ${riskTextColors[data.longTermRisk.cardiovascularRisk]}`}>
+                {t(`risk.${data.longTermRisk.cardiovascularRisk}`)}
               </p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* BMI Info */}
-      {result.bmi > 0 && (
+      {data.longTermRisk.bmi > 0 && (
         <Card className="mb-6 border-2" data-testid="card-bmi">
           <CardContent className="flex items-center justify-between gap-4 p-4">
             <div className="flex items-center gap-4">
@@ -392,18 +390,17 @@ ${t("results.disclaimer")}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t("bmi.value")}</p>
-                <p className="text-xl font-bold">{result.bmi.toFixed(1)}</p>
+                <p className="text-xl font-bold">{data.longTermRisk.bmi.toFixed(1)}</p>
               </div>
             </div>
             <Badge variant="secondary" className="text-sm">
-              {t(`bmi.${result.bmiCategory}`)}
+              {t(`bmi.${data.longTermRisk.bmiCategory}`)}
             </Badge>
           </CardContent>
         </Card>
       )}
 
-      {/* Long-term Risk Factors */}
-      {result.riskFactors && result.riskFactors.length > 0 && (
+      {data.longTermRisk.factors && data.longTermRisk.factors.length > 0 && (
         <Card className="mb-8 border-2" data-testid="card-risk-factors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -413,7 +410,7 @@ ${t("results.disclaimer")}
           </CardHeader>
           <CardContent>
             <Accordion type="multiple" className="w-full">
-              {result.riskFactors.map((factor) => (
+              {data.longTermRisk.factors.map((factor) => (
                 <AccordionItem key={factor.id} value={factor.id}>
                   <AccordionTrigger className="text-start hover:no-underline" data-testid={`accordion-risk-factor-${factor.id}`}>
                     <div className="flex items-center gap-3">
@@ -445,7 +442,6 @@ ${t("results.disclaimer")}
         </Card>
       )}
 
-      {/* Lifestyle Suggestions */}
       <Card className="mb-8 border-2" data-testid="card-lifestyle">
         <CardHeader>
           <CardTitle>{t("lifestyle.title")}</CardTitle>
@@ -453,7 +449,7 @@ ${t("results.disclaimer")}
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
-            {result.lifestyleSuggestions.map((suggestion) => {
+            {data.lifestyleSuggestions.map((suggestion) => {
               const IconComponent = lifestyleIcons[suggestion.icon] || Heart;
               return (
                 <Card key={suggestion.id} className="hover-elevate">
@@ -473,7 +469,6 @@ ${t("results.disclaimer")}
         </CardContent>
       </Card>
 
-      {/* Warning Signs */}
       <Card className="mb-8 border-2 border-risk-high/20 bg-risk-high/5" data-testid="card-warnings">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-risk-high">
@@ -484,7 +479,7 @@ ${t("results.disclaimer")}
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {result.warningSigns.map((warning) => (
+            {data.warningSigns.map((warning) => (
               <div key={warning.id} className="flex items-start gap-3 rounded-lg bg-background p-4">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-risk-high" />
                 <div>
@@ -497,7 +492,6 @@ ${t("results.disclaimer")}
         </CardContent>
       </Card>
 
-      {/* When to See a Doctor */}
       <Card className="mb-8 border-2" data-testid="card-doctor-timeline">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -542,8 +536,7 @@ ${t("results.disclaimer")}
         </CardContent>
       </Card>
 
-      {/* Care Pathway */}
-      {result.carePathway && (
+      {data.carePathway && (
         <Card className="mb-8 border-2" data-testid="card-care-pathway">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -561,7 +554,7 @@ ${t("results.disclaimer")}
               <MapPin className="h-5 w-5 shrink-0 text-primary mt-0.5" />
               <div>
                 <p className="font-medium text-sm text-muted-foreground mb-1">{t("pathway.where")}</p>
-                <p className="font-semibold">{t(result.carePathway.whereToGoKey)}</p>
+                <p className="font-semibold">{t(data.carePathway.whereToGoKey)}</p>
               </div>
             </div>
 
@@ -569,16 +562,16 @@ ${t("results.disclaimer")}
               <Clock className="h-5 w-5 shrink-0 text-primary mt-0.5" />
               <div>
                 <p className="font-medium text-sm text-muted-foreground mb-1">{t("pathway.when")}</p>
-                <p className="font-semibold">{t(result.carePathway.whenToGoKey)}</p>
+                <p className="font-semibold">{t(data.carePathway.whenToGoKey)}</p>
               </div>
             </div>
 
-            {result.carePathway.additionalGuidanceKey && (
+            {data.carePathway.additionalGuidanceKey && (
               <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
                 <AlertCircle className="h-5 w-5 shrink-0 text-amber-500 mt-0.5" />
                 <div>
                   <p className="font-medium text-sm text-amber-600 dark:text-amber-400 mb-1">{t("pathway.additional")}</p>
-                  <p className="text-sm">{t(result.carePathway.additionalGuidanceKey)}</p>
+                  <p className="text-sm">{t(data.carePathway.additionalGuidanceKey)}</p>
                 </div>
               </div>
             )}
@@ -586,8 +579,7 @@ ${t("results.disclaimer")}
         </Card>
       )}
 
-      {/* Recommended Facilities */}
-      {result.recommendedFacilities && result.recommendedFacilities.length > 0 && (
+      {data.facilityRecommendations && data.facilityRecommendations.length > 0 && (
         <Card className="mb-8 border-2" data-testid="card-facilities">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -602,7 +594,7 @@ ${t("results.disclaimer")}
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {result.recommendedFacilities.map((facility, index) => {
+              {data.facilityRecommendations.map((facility, index) => {
                 const FacilityIcon = getFacilityTypeIcon(facility.type);
                 return (
                   <div
@@ -663,7 +655,6 @@ ${t("results.disclaimer")}
         </Card>
       )}
 
-      {/* Trusted Resources */}
       <Card className="mb-8 border-2" data-testid="card-resources">
         <CardHeader>
           <CardTitle>{t("resources.title")}</CardTitle>
@@ -703,7 +694,6 @@ ${t("results.disclaimer")}
         </CardContent>
       </Card>
 
-      {/* Bottom CTA */}
       <div className="flex flex-col items-center gap-4 rounded-lg bg-muted/30 p-8 text-center">
         <p className="text-muted-foreground">{t("results.disclaimer")}</p>
         <div className="flex flex-wrap justify-center gap-4">

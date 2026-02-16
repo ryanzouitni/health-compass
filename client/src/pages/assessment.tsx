@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/lib/language-context";
 import { apiRequest } from "@/lib/queryClient";
-import type { Assessment, RiskResult, LocationAccess } from "@shared/schema";
+import type { Assessment, AssessmentApiResponse, LocationAccess } from "@shared/schema";
 import { moroccoRegions } from "@shared/facilities";
 
 const TOTAL_STEPS = 6;
@@ -174,14 +174,14 @@ export default function AssessmentPage() {
     mutationFn: async (data: Assessment) => {
       const response = await apiRequest("POST", "/api/assess", data);
       const result = await response.json();
-      return result as { success: boolean; result: RiskResult };
+      return result as AssessmentApiResponse;
     },
     onSuccess: (data) => {
-      sessionStorage.setItem("assessmentResult", JSON.stringify(data.result));
+      sessionStorage.setItem("assessmentResult", JSON.stringify(data));
       setLocation("/results");
     },
     onError: (error) => {
-      console.error("Assessment error:", error);
+      console.error("Assessment submission failed");
     },
   });
 

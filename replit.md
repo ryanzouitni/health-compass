@@ -55,12 +55,36 @@ Custom symptoms are factored into the risk evaluation:
 - Create a "Additional Reported Symptoms" contributing factor displayed in results
 - Trigger "see a doctor soon" urgency recommendation
 
+### API Response Structure
+The `/api/assess` endpoint returns a structured JSON response with clear separation:
+```json
+{
+  "success": true,
+  "urgency": { "level", "factors[]", "recommendedActionKey" },
+  "longTermRisk": { "level", "diabetesRisk", "cardiovascularRisk", "score", "factors[]", "bmi", "bmiCategory" },
+  "lifestyleSuggestions": [...],
+  "warningSigns": [...],
+  "carePathway": { ... },
+  "facilityRecommendations": [...],
+  "meta": { "isPediatricUnsupported", "disclaimerKey", "locationProvided", "facilityNoteKey" }
+}
+```
+- `urgency` = acute/symptom-driven assessment (primary display)
+- `longTermRisk` = chronic risk factors for prevention (secondary display)
+- Pediatric cases (infant/child) return `meta.isPediatricUnsupported: true` with no long-term scoring
+
+### Security
+- **Helmet** security headers enabled (CSP disabled for dev compatibility)
+- **Rate limiting**: 60 requests per 15 minutes per IP on `/api/assess`
+- **No PHI logging**: Server logs only method/path/status/duration, never request bodies
+
 ### Data Flow
 1. User completes multi-step assessment form on frontend
 2. Form data validated against shared Zod schema
 3. POST to `/api/assess` with assessment data
 4. Server calculates risk scores and generates personalized recommendations
-5. Results returned to client and displayed (stored only in client session)
+5. Structured response returned with urgency and longTermRisk separated
+6. Full response stored in sessionStorage (not just result object)
 
 ### Internationalization (i18n)
 - Client-side translation system with 4 supported languages: English, French, Arabic, Amazigh

@@ -237,6 +237,16 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.urgentCardio.explanation": "Chest pain, shortness of breath, or irregular heartbeat require immediate medical evaluation as they may indicate a serious heart condition.",
     "factor.customSymptoms.explanation": "The additional symptoms you reported should be discussed with a healthcare provider.",
     "factor.pediatricUrgent.explanation": "These symptoms in children may indicate diabetic ketoacidosis (DKA), which requires urgent medical attention.",
+    "factor.pediatricUnsupported": "Pediatric Assessment Not Supported",
+    "factor.pediatricUnsupported.explanation": "Risk assessment for children under 12 is not clinically validated in this tool. Please consult a pediatrician for proper evaluation.",
+    "pediatric.unsupported.title": "Pediatric Assessment Not Available",
+    "pediatric.unsupported.desc": "This tool is designed for adults and older adolescents. Accurate risk assessment for children under 12 requires specialized pediatric evaluation.",
+    "pediatric.unsupported.emergency": "If your child shows signs of illness, please contact a pediatrician or visit an emergency department immediately.",
+    "disclaimer.notDiagnosis": "This is not a medical diagnosis. Please consult a healthcare professional.",
+    "facility.callFirstHoursMayVary": "Call ahead to confirm hours and availability. Operating hours may vary.",
+    "action.emergency": "Seek emergency care immediately",
+    "action.soon": "See a doctor within the next few days",
+    "action.routine": "Schedule a routine checkup",
     "factor.thirst.explanation": "Excessive thirst can be a warning sign of high blood sugar levels.",
     "factor.urination.explanation": "Frequent urination often accompanies high blood sugar as the body tries to eliminate excess glucose.",
     "factor.weightChange.explanation": "Unexplained weight loss or gain can indicate metabolic issues including diabetes.",
@@ -248,11 +258,6 @@ export const translations: Record<Language, Record<string, string>> = {
     // Facility & Care
     "facility.callAhead": "If possible, call ahead before visiting a facility so they can prepare for your arrival.",
     "facility.emergencyNote": "In a true emergency (e.g. chest pain, difficulty breathing), go directly to the nearest hospital or call emergency services.",
-    
-    // Pediatric Unsupported
-    "pediatric.unsupported.title": "Pediatric Assessment Not Yet Available",
-    "pediatric.unsupported.desc": "Our risk assessment tool is currently designed for adults and adolescents. Pediatric risk evaluation requires specialized clinical tools that we do not yet support.",
-    "pediatric.unsupported.emergency": "If your child shows urgent symptoms such as fruity-smelling breath, persistent vomiting, or extreme lethargy, seek immediate medical attention.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "Lifestyle Suggestions",
@@ -682,6 +687,16 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.urgentCardio.explanation": "Douleur thoracique, essoufflement ou battements cardiaques irréguliers nécessitent une évaluation médicale immédiate car ils peuvent indiquer une condition cardiaque grave.",
     "factor.customSymptoms.explanation": "Les symptômes supplémentaires que vous avez signalés doivent être discutés avec un professionnel de santé.",
     "factor.pediatricUrgent.explanation": "Ces symptômes chez les enfants peuvent indiquer une acidocétose diabétique (ACD), qui nécessite une attention médicale urgente.",
+    "factor.pediatricUnsupported": "Évaluation Pédiatrique Non Supportée",
+    "factor.pediatricUnsupported.explanation": "L'évaluation des risques pour les enfants de moins de 12 ans n'est pas cliniquement validée dans cet outil. Veuillez consulter un pédiatre.",
+    "pediatric.unsupported.title": "Évaluation Pédiatrique Non Disponible",
+    "pediatric.unsupported.desc": "Cet outil est conçu pour les adultes et les adolescents. L'évaluation précise des risques pour les enfants de moins de 12 ans nécessite une évaluation pédiatrique spécialisée.",
+    "pediatric.unsupported.emergency": "Si votre enfant présente des signes de maladie, veuillez contacter un pédiatre ou vous rendre aux urgences immédiatement.",
+    "disclaimer.notDiagnosis": "Ceci n'est pas un diagnostic médical. Veuillez consulter un professionnel de la santé.",
+    "facility.callFirstHoursMayVary": "Appelez à l'avance pour confirmer les horaires et la disponibilité.",
+    "action.emergency": "Consultez les urgences immédiatement",
+    "action.soon": "Consultez un médecin dans les prochains jours",
+    "action.routine": "Planifiez un bilan de routine",
     "factor.thirst.explanation": "Une soif excessive peut être un signe d'alerte de taux de sucre élevé dans le sang.",
     "factor.urination.explanation": "Les mictions fréquentes accompagnent souvent les taux de sucre élevés.",
     "factor.weightChange.explanation": "Une perte ou un gain de poids inexpliqué peut indiquer des problèmes métaboliques.",
@@ -693,11 +708,6 @@ export const translations: Record<Language, Record<string, string>> = {
     // Facility & Care
     "facility.callAhead": "Si possible, appelez avant de vous rendre dans un établissement pour qu'ils puissent préparer votre arrivée.",
     "facility.emergencyNote": "En cas d'urgence réelle (ex: douleur thoracique, difficulté respiratoire), rendez-vous directement à l'hôpital le plus proche ou appelez les services d'urgence.",
-    
-    // Pediatric Unsupported
-    "pediatric.unsupported.title": "Évaluation Pédiatrique Pas Encore Disponible",
-    "pediatric.unsupported.desc": "Notre outil d'évaluation des risques est actuellement conçu pour les adultes et les adolescents. L'évaluation pédiatrique nécessite des outils cliniques spécialisés que nous ne supportons pas encore.",
-    "pediatric.unsupported.emergency": "Si votre enfant présente des symptômes urgents tels qu'une haleine fruitée, des vomissements persistants ou une léthargie extrême, consultez immédiatement un médecin.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "Suggestions de Mode de Vie",
@@ -1127,6 +1137,16 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.urgentCardio.explanation": "ألم الصدر أو ضيق التنفس أو عدم انتظام ضربات القلب تتطلب تقييماً طبياً فورياً لأنها قد تشير إلى حالة قلبية خطيرة.",
     "factor.customSymptoms.explanation": "الأعراض الإضافية التي أبلغت عنها يجب مناقشتها مع مقدم رعاية صحية.",
     "factor.pediatricUrgent.explanation": "هذه الأعراض عند الأطفال قد تشير إلى الحماض الكيتوني السكري، والذي يتطلب رعاية طبية عاجلة.",
+    "factor.pediatricUnsupported": "تقييم الأطفال غير مدعوم",
+    "factor.pediatricUnsupported.explanation": "تقييم المخاطر للأطفال دون 12 سنة غير معتمد سريرياً في هذه الأداة. يرجى استشارة طبيب أطفال.",
+    "pediatric.unsupported.title": "تقييم الأطفال غير متاح",
+    "pediatric.unsupported.desc": "هذه الأداة مصممة للبالغين والمراهقين. تقييم المخاطر الدقيق للأطفال دون 12 سنة يتطلب تقييماً متخصصاً من طبيب أطفال.",
+    "pediatric.unsupported.emergency": "إذا ظهرت على طفلك علامات مرض، يرجى الاتصال بطبيب أطفال أو زيارة قسم الطوارئ فوراً.",
+    "disclaimer.notDiagnosis": "هذا ليس تشخيصاً طبياً. يرجى استشارة أخصائي رعاية صحية.",
+    "facility.callFirstHoursMayVary": "اتصل مسبقاً لتأكيد الساعات والتوفر. قد تختلف ساعات العمل.",
+    "action.emergency": "اطلب رعاية طارئة فوراً",
+    "action.soon": "راجع طبيباً خلال الأيام القليلة القادمة",
+    "action.routine": "حدد موعداً لفحص روتيني",
     "factor.thirst.explanation": "العطش المفرط يمكن أن يكون علامة تحذيرية لارتفاع مستوى السكر في الدم.",
     "factor.urination.explanation": "التبول المتكرر غالباً ما يصاحب ارتفاع السكر في الدم.",
     "factor.weightChange.explanation": "تغير الوزن غير المبرر قد يشير إلى مشاكل في التمثيل الغذائي.",
@@ -1138,11 +1158,6 @@ export const translations: Record<Language, Record<string, string>> = {
     // Facility & Care
     "facility.callAhead": "إن أمكن، اتصل مسبقاً قبل زيارة المنشأة حتى يتمكنوا من التحضير لوصولك.",
     "facility.emergencyNote": "في حالة الطوارئ الحقيقية (مثل ألم الصدر، صعوبة التنفس)، اذهب مباشرة إلى أقرب مستشفى أو اتصل بخدمات الطوارئ.",
-    
-    // Pediatric Unsupported
-    "pediatric.unsupported.title": "التقييم للأطفال غير متاح بعد",
-    "pediatric.unsupported.desc": "أداة تقييم المخاطر الخاصة بنا مصممة حالياً للبالغين والمراهقين. يتطلب تقييم مخاطر الأطفال أدوات سريرية متخصصة لا ندعمها بعد.",
-    "pediatric.unsupported.emergency": "إذا ظهرت على طفلك أعراض عاجلة مثل رائحة نفس فاكهية أو قيء مستمر أو خمول شديد، اطلب الرعاية الطبية فوراً.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "اقتراحات نمط الحياة",
@@ -1572,6 +1587,16 @@ export const translations: Record<Language, Record<string, string>> = {
     "factor.urgentCardio.explanation": "ⵜⴰⵣⵣⵓⵍⵜ ⴳ ⵉⴷⵎⴰⵔⵏ ⵏⵖ ⵜⴰⵣⵣⵓⵍⵜ ⴳ ⵓⵙⵏⵓⴼⵙ ⵏⵖ ⵜⴰⵡⵏⵏⴰⴹⵜ ⵏ ⵓⵍ ⵓⵔ ⵉⵎⵓⵜⵜⵓⵢⵏ ⵉⵔⴰⵏ ⴰⵙⵏⴼⴰⵔ ⵉⵎⵎⵙⵜⵉ.",
     "factor.customSymptoms.explanation": "ⵉⵏⵥⵉⵜⵏ ⵢⴰⴹⵏⵉⵏ ⵉⵜⵜⵡⴰⵙⵏⵓⵎⵎⵍⵏ ⵉⵍⴰⵇ ⴰⴷ ⵜⵜⵓⵙⵎⵔⵙⵏ ⴷ ⵓⵎⵙⵏⴼⴰⵔ.",
     "factor.pediatricUrgent.explanation": "ⵉⵏⵥⵉⵜⵏ ⴰⴷ ⴳ ⵉⴼⵔⵓⵅⵏ ⵉⵣⵎⵔⵏ ⴰⴷ ⵉⵎⵎⵍⵏ ⴰⵃⵎⴰⴹ ⵉⵙⵓⵜⵓⵏⵉⵏ ⵏ ⵓⵙⵓⴽⵔ ⵉⵔⴰⵏ ⴰⵙⵏⴼⴰⵔ ⵉⵎⵎⵙⵜⵉⵏ.",
+    "factor.pediatricUnsupported": "ⴰⵙⵜⵉⵎⵔ ⵏ ⵉⴼⵔⵓⵅⵏ ⵓⵔ ⵉⵜⵜⵓⵙⴽⴰⵔ",
+    "factor.pediatricUnsupported.explanation": "ⴰⵙⵜⵉⵎⵔ ⵏ ⵡⴰⴹⴹⴰⵏ ⵉ ⵉⴼⵔⵓⵅⵏ ⴷⴷⴰⵡ 12 ⵏ ⵉⵙⴳⴳⵯⴰⵙⵏ ⵓⵔ ⵉⵜⵜⵓⵙⴼⵓⴹ ⴳ ⵓⵎⴰⵙⵙ ⴰⴷ. ⵙⵉⵡⵍ ⵉ ⵓⵎⵙⴳⵏⴰⴼ ⵏ ⵉⴼⵔⵓⵅⵏ.",
+    "pediatric.unsupported.title": "ⴰⵙⵜⵉⵎⵔ ⵏ ⵉⴼⵔⵓⵅⵏ ⵓⵔ ⵉⵍⵍⵉ",
+    "pediatric.unsupported.desc": "ⴰⵎⴰⵙⵙ ⴰⴷ ⵉⵜⵜⵓⵙⴽⴰⵔ ⵉ ⵉⵎⵖⵔⴰⵏ. ⴰⵙⵜⵉⵎⵔ ⵏ ⵉⴼⵔⵓⵅⵏ ⴷⴷⴰⵡ 12 ⵏ ⵉⵙⴳⴳⵯⴰⵙⵏ ⵉⵔⴰ ⴰⵙⵜⵉⵎⵔ ⵓⵙⵍⵉⴷ ⵙⴳ ⵓⵎⵙⴳⵏⴰⴼ ⵏ ⵉⴼⵔⵓⵅⵏ.",
+    "pediatric.unsupported.emergency": "ⵉⴳ ⵉⴼⵔⵓⵅ ⵏⵏⴽ ⵉⵙⵎⵎⵍ ⵉⵏⵥⵉⵜⵏ ⵏ ⵜⵎⴰⴹⵓⵏⵜ, ⵙⵉⵡⵍ ⵉ ⵓⵎⵙⴳⵏⴰⴼ ⵏ ⵉⴼⵔⵓⵅⵏ ⵏⵖ ⴷⴷⵓ ⵙ ⵜⵉⵏⵎⵍ ⵏ ⵜⵎⵙⵙⵜⵉⵜ ⴷⵖⵢⴰ.",
+    "disclaimer.notDiagnosis": "ⵡⴰⴷ ⵓⵔ ⵉⴳⴰ ⴰⵙⵜⵉⵎⵔ ⴰⵎⵙⴳⵏⴰⴼ. ⵙⵉⵡⵍ ⵉ ⵓⵎⵙⴳⵏⴰⴼ.",
+    "facility.callFirstHoursMayVary": "ⵙⵉⵡⵍ ⵓⵇⴱⵍ ⴰⴷ ⵜⵙⴼⵓⴹⵜ ⵜⵉⵙⵔⴰⴳⵉⵏ ⴷ ⵜⵉⵍⵍⵉⵜ. ⵜⵉⵙⵔⴰⴳⵉⵏ ⵉⵣⵎⵔⵏ ⴰⴷ ⵙⵏⴼⵍⵏⵜ.",
+    "action.emergency": "ⴰⵔ ⴰⵙⵏⴼⴰⵔ ⵉⵎⵎⵙⵜⵉⵏ ⴷⵖⵢⴰ",
+    "action.soon": "ⵥⵕ ⴰⵎⵙⴳⵏⴰⴼ ⴳ ⵉⵎⴰⵍⴰⵙⵙⵏ ⴷ ⵉⴷⴷⴰⵏ",
+    "action.routine": "ⵙⵎⴷ ⴰⵙⵜⵉⵎⵔ ⵏ ⵜⵡⵉⵍⴰ",
     "factor.thirst.explanation": "ⴼⴰⴹ ⵉⵎⵇⵇⵓⵔⵏ ⵉⵣⵎⵔ ⴰⴷ ⵉⴳ ⵜⴰⵎⴰⵜⴰⵔⵜ ⵏ ⵓⵙⵓⴽⵔ ⴰⵎⴰⵜⴰⵢ.",
     "factor.urination.explanation": "ⵜⴰⴱⴰⵡⴰⵍⵜ ⵢⵜⵜⵓⵖⴰⵍⵏⵜ ⴷⴰ ⵜⵜⴰⴳⵉ ⴷ ⵓⵙⵓⴽⵔ ⴰⵎⴰⵜⴰⵢ.",
     "factor.weightChange.explanation": "ⴰⵙⵏⴼⵍ ⵏ ⵓⵜⵉⴳ ⵓⵔ ⵉⵜⵜⵡⴰⵙⵙⴰⵏ ⵉⵣⵎⵔ ⴰⴷ ⵉⵎⵎⵍ ⵉⵎⵓⴽⵔⵉⵙⵏ.",
@@ -1583,11 +1608,6 @@ export const translations: Record<Language, Record<string, string>> = {
     // Facility & Care
     "facility.callAhead": "ⵎⴰ ⵜⵣⵎⵔⴷ, ⵙⵉⵡⵍ ⴷⴰⵜ ⵏ ⵜⵉⵣⵉⵜ ⴰⴷ ⵙⵀⵢⵢⵓⵏ ⵉ ⵓⵙⵉⴽⵉ ⵏⵏⴽ.",
     "facility.emergencyNote": "ⴳ ⵜⵣⵣⵉⴳⵣⵜ ⵜⴰⵎⴷⴷⵉⵜ, ⴷⴷⵓ ⵙ ⵜⵏⴰⴼⵓⵜ ⵜⴰⵎⵇⵇⵔⴰⵏⵜ ⵜⴰⵎⵉⵔⴰⵏⵜ.",
-    
-    // Pediatric Unsupported
-    "pediatric.unsupported.title": "ⴰⵙⴼⵔⴰⵙ ⵏ ⵉⵅⴼⴰⵡⵏ ⵓⵔ ⵉⵍⵍⵉ ⵙⵓⵍ",
-    "pediatric.unsupported.desc": "ⴰⵎⵙⵙⵓⴷⵓ ⵏⵏⵖ ⵉⵜⵜⵡⴰⵙⴽⴰⵔ ⵉ ⵉⵎⵖⵔⴰⵏ ⴷ ⵉⵎⵥⵢⴰⵏⵏ. ⴰⵙⴼⵔⴰⵙ ⵏ ⵉⵅⴼⴰⵡⵏ ⵉⵅⵚⵚⴰ ⵉⵎⴰⵙⵙⵏ ⵉⵏⵎⵍⴰⵏ.",
-    "pediatric.unsupported.emergency": "ⵎⴰ ⵉⵙⵎⴰⵏ ⵓⵅⴼⴰⵡ ⵏⵏⴽ ⵉⵏⵥⵉⵜⵏ ⵉⵎⵙⵜⵉⵏ, ⵔⵣⵎ ⴰⵎⵙⵏⴼⴰⵔ ⴷⵖⵉⴽⴰ.",
     
     // Lifestyle Suggestions
     "lifestyle.title": "ⵉⵙⵜⵓⵛⵉⵏ ⵏ ⵜⵓⴷⵔⵜ",

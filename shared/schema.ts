@@ -151,30 +151,39 @@ export interface FacilityRecommendation {
   mapsUrl?: string;
 }
 
-// Complete risk assessment result
-export interface RiskResult {
-  isPediatricUnsupported?: boolean;
+export interface UrgencyResult {
+  level: UrgencyLevel;
+  factors: RiskFactor[];
+  recommendedActionKey: string;
+}
+
+export interface LongTermRiskResult {
+  level: RiskLevel;
   diabetesRisk: RiskLevel;
   cardiovascularRisk: RiskLevel;
-  overallRisk: RiskLevel;
-  urgency: UrgencyLevel;
-  urgencyFactors: RiskFactor[];
-  riskFactors: RiskFactor[];
-  contributingFactors: RiskFactor[];
-  lifestyleSuggestions: LifestyleSuggestion[];
-  warningSigns: WarningSign[];
+  score: number;
+  factors: RiskFactor[];
   bmi: number;
   bmiCategory: string;
-  carePathway?: CarePathway;
-  recommendedFacilities?: FacilityRecommendation[];
+}
+
+export interface AssessmentMeta {
+  isPediatricUnsupported: boolean;
+  disclaimerKey: string;
   locationProvided: boolean;
+  facilityNoteKey?: string;
+}
+
+export interface AssessmentApiResponse {
+  success: boolean;
+  urgency: UrgencyResult;
+  longTermRisk: LongTermRiskResult;
+  lifestyleSuggestions: LifestyleSuggestion[];
+  warningSigns: WarningSign[];
+  carePathway?: CarePathway;
+  facilityRecommendations?: FacilityRecommendation[];
+  meta: AssessmentMeta;
 }
 
 // Language type
 export type Language = "en" | "fr" | "ar" | "am";
-
-// API response type
-export interface AssessmentResponse {
-  success: boolean;
-  result: RiskResult;
-}

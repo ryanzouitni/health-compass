@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { assessmentSchema } from "../shared/schema";
-import type { Assessment, RiskResult, RiskFactor, LifestyleSuggestion, WarningSign, RiskLevel, UrgencyLevel, CarePathway, FacilityRecommendation } from "../shared/schema";
+import type { Assessment, AssessmentApiResponse, RiskFactor, LifestyleSuggestion, WarningSign, RiskLevel, UrgencyLevel, CarePathway, FacilityRecommendation } from "../shared/schema";
 import { findNearestFacilities, findFacilitiesByRegion, type HealthcareFacility } from "../shared/facilities";
 
 // Calculate BMI
@@ -33,21 +33,27 @@ function getAgeInYears(ageValue: number, ageUnit: "years" | "months"): number {
   return ageUnit === "months" ? ageValue / 12 : ageValue;
 }
 
-// Calculate risk scores based on assessment data
-function calculateRiskAssessment(data: Assessment): RiskResult {
+function getRecommendedActionKey(urgency: UrgencyLevel): string {
+  switch (urgency) {
+    case "urgent": return "action.emergency";
+    case "see_doctor_soon": return "action.soon";
+    case "monitor": return "action.routine";
+  }
+}
+
+function calculateRiskAssessment(data: Assessment): AssessmentApiResponse {
   // Get age info
   const ageGroup = getAgeGroup(data.ageValue, data.ageUnit);
   const ageInYears = getAgeInYears(data.ageValue, data.ageUnit);
 
-  // Pediatric unsupported - return safe message for v1
   if (ageGroup === "infant" || ageGroup === "child") {
-    const urgencyFactors: RiskFactor[] = [];
-    // Still check for pediatric DKA red flags
+    const pedUrgencyFactors: RiskFactor[] = [];
     const pediatricRedFlags = [data.fruityBreath, data.lethargy, data.vomiting].filter(Boolean).length;
     const hasUrgentPediatricSymptoms = pediatricRedFlags >= 2;
+    const pedUrgencyLevel: UrgencyLevel = hasUrgentPediatricSymptoms ? "urgent" : "monitor";
 
     if (hasUrgentPediatricSymptoms) {
-      urgencyFactors.push({
+      pedUrgencyFactors.push({
         id: "pediatricUrgent",
         nameKey: "factor.pediatricUrgent",
         explanationKey: "factor.pediatricUrgent.explanation",
@@ -56,22 +62,37 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     }
 
     return {
-      isPediatricUnsupported: true,
-      diabetesRisk: "low",
-      cardiovascularRisk: "low",
-      overallRisk: "low",
-      urgency: hasUrgentPediatricSymptoms ? "urgent" : "monitor",
-      urgencyFactors,
-      riskFactors: [],
-      contributingFactors: urgencyFactors,
+      success: true,
+      urgency: {
+        level: pedUrgencyLevel,
+        factors: pedUrgencyFactors,
+        recommendedActionKey: getRecommendedActionKey(pedUrgencyLevel),
+      },
+      longTermRisk: {
+        level: "low" as RiskLevel,
+        diabetesRisk: "low" as RiskLevel,
+        cardiovascularRisk: "low" as RiskLevel,
+        score: 0,
+        factors: [{
+          id: "pediatricUnsupported",
+          nameKey: "factor.pediatricUnsupported",
+          explanationKey: "factor.pediatricUnsupported.explanation",
+          severity: "low" as const,
+        }],
+        bmi: 0,
+        bmiCategory: "normal",
+      },
       lifestyleSuggestions: [],
       warningSigns: [
         { id: "chestPain", signKey: "warning.chestPain", actionKey: "warning.chestPain.action" },
         { id: "breathing", signKey: "warning.breathing", actionKey: "warning.breathing.action" },
       ],
-      bmi: 0,
-      bmiCategory: "normal",
-      locationProvided: false,
+      facilityRecommendations: undefined,
+      meta: {
+        isPediatricUnsupported: true,
+        disclaimerKey: "disclaimer.notDiagnosis",
+        locationProvided: false,
+      },
     };
   }
 
@@ -682,26 +703,40 @@ function calculateRiskAssessment(data: Assessment): RiskResult {
     }
   }
 
-  // Split contributing factors into urgency (symptom-based) and risk (long-term)
   const urgencyFactorIds = ["urgentCardio", "cardioSymptoms", "pediatricUrgent", "symptoms", "customSymptoms", "multipleAdditionalSymptoms"];
   const urgencyFactors = contributingFactors.filter(f => urgencyFactorIds.includes(f.id));
   const riskFactors = contributingFactors.filter(f => !urgencyFactorIds.includes(f.id));
 
+  const overallScore = Math.max(diabetesScore, cardiovascularScore);
+
   return {
-    diabetesRisk,
-    cardiovascularRisk,
-    overallRisk,
-    urgency,
-    urgencyFactors,
-    riskFactors,
-    contributingFactors,
+    success: true,
+    urgency: {
+      level: urgency,
+      factors: urgencyFactors,
+      recommendedActionKey: getRecommendedActionKey(urgency),
+    },
+    longTermRisk: {
+      level: overallRisk,
+      diabetesRisk,
+      cardiovascularRisk,
+      score: overallScore,
+      factors: riskFactors,
+      bmi,
+      bmiCategory,
+    },
     lifestyleSuggestions,
     warningSigns,
-    bmi,
-    bmiCategory,
     carePathway,
-    recommendedFacilities,
-    locationProvided,
+    facilityRecommendations: recommendedFacilities,
+    meta: {
+      isPediatricUnsupported: false,
+      disclaimerKey: "disclaimer.notDiagnosis",
+      locationProvided,
+      facilityNoteKey: recommendedFacilities && recommendedFacilities.length > 0
+        ? "facility.callFirstHoursMayVary"
+        : undefined,
+    },
   };
 }
 
@@ -709,14 +744,12 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Health assessment endpoint
   app.post("/api/assess", (req, res) => {
     try {
-      // Validate input
       const validationResult = assessmentSchema.safeParse(req.body);
       
       if (!validationResult.success) {
-        console.error("Validation failed:", validationResult.error.errors.length, "errors");
+        console.info("Assessment validation failed", { route: "/api/assess", errorCount: validationResult.error.errors.length });
         return res.status(400).json({
           success: false,
           error: "Invalid assessment data",
@@ -724,15 +757,13 @@ export async function registerRoutes(
         });
       }
 
+      console.info("Assessment request", { route: "/api/assess" });
       const assessmentData = validationResult.data;
-      const result = calculateRiskAssessment(assessmentData);
+      const response = calculateRiskAssessment(assessmentData);
 
-      res.json({
-        success: true,
-        result,
-      });
+      res.json(response);
     } catch (error) {
-      console.error("Assessment error:", error);
+      console.error("Assessment processing error");
       res.status(500).json({
         success: false,
         error: "Failed to process assessment",
