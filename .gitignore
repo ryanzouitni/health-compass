@@ -1,6 +1,21 @@
 node_modules
 dist
+.env
+.env.*
+.local
+.replit
 .DS_Store
-server/public
+
+# Logs
+*.log
+logs
+
+# Build / temp
+*.tmp
+*.cache
+
+# Vite
 vite.config.ts.*
+
+# Archives
 *.tar.gz
