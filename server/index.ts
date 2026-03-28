@@ -1,4 +1,4 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
@@ -14,9 +14,11 @@ declare module "http" {
   }
 }
 
-app.use(helmet({
-  contentSecurityPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  }),
+);
 
 const assessLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -56,7 +58,7 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      const logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       log(logLine);
     }
   });
@@ -65,39 +67,54 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  await registerRoutes(httpServer, app);
-  // IMPORTANT: If an /api route doesn't exist, return JSON (not Vite HTML)
-  app.use("/api", (_req, res) => {
-    res.status(404).json({
-      success: false,
-      error: "API route not found",
+  try {
+    console.log("🚀 Starting server...");
+
+    await registerRoutes(httpServer, app);
+    console.log("✅ Routes registered");
+
+    app.use("/api", (_req, res) => {
+      res.status(404).json({
+        success: false,
+        error: "API route not found",
+      });
     });
-  });
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err?.status || err?.statusCode || 500;
+      const message = err?.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
-  });
+      console.error("🔥 Express error:", err);
 
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  } else {
-    const { setupVite } = await import("./vite");
-    await setupVite(httpServer, app);
+      if (!res.headersSent) {
+        res.status(status).json({ message });
+      }
+    });
+
+    if (process.env.NODE_ENV === "production") {
+      console.log("📦 Serving static files in production");
+      serveStatic(app);
+    } else {
+      console.log("🛠 Setting up Vite in development");
+      const { setupVite } = await import("./vite");
+      await setupVite(httpServer, app);
+    }
+
+    const port = parseInt(process.env.PORT || "5000", 10);
+
+    httpServer.listen(
+      {
+        port,
+        host: "0.0.0.0",
+        reusePort: true,
+      },
+      () => {
+        console.log(`✅ Server running on port ${port}`);
+        log(`serving on port ${port}`);
+      },
+    );
+  } catch (err) {
+    console.error("💥 Startup failed:", err);
+    process.exit(1);
   }
-
-  const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
 })();
