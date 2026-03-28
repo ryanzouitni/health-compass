@@ -66,6 +66,13 @@ app.use((req, res, next) => {
 
 (async () => {
   await registerRoutes(httpServer, app);
+  // IMPORTANT: If an /api route doesn't exist, return JSON (not Vite HTML)
+  app.use("/api", (_req, res) => {
+    res.status(404).json({
+      success: false,
+      error: "API route not found",
+    });
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
